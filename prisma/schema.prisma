@@ -1,0 +1,112 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id               String         @id @default(cuid())
+  email            String         @unique
+  name             String?
+  password         String
+  role             Role           @default(STUDENT)
+  twoFactorSecret  String?
+  twoFactorEnabled Boolean        @default(false)
+  student          Student?
+  notifications    Notification[]
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+}
+
+model Student {
+  id          String    @id @default(cuid())
+  userId      String?   @unique
+  user        User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  name        String
+  phone       String?
+  level       String?
+  term        String?
+  active      Boolean   @default(true)
+  inviteToken String?   @unique
+  invitedAt   DateTime?
+  sessions    Session[]
+  payments    Payment[]
+  notes       Note[]
+  createdAt   DateTime  @default(now())
+
+  @@index([name])
+}
+
+model Session {
+  id        String        @id @default(cuid())
+  studentId String
+  student   Student       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  date      DateTime
+  topic     String?
+  status    SessionStatus @default(SCHEDULED)
+  createdAt DateTime      @default(now())
+
+  @@index([studentId, date])
+}
+
+model Payment {
+  id        String        @id @default(cuid())
+  studentId String
+  student   Student       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  amount    Int
+  date      DateTime
+  status    PaymentStatus @default(PENDING)
+  createdAt DateTime      @default(now())
+
+  @@index([studentId, date])
+}
+
+model Note {
+  id          String   @id @default(cuid())
+  studentId   String
+  student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  title       String
+  content     String
+  date        DateTime
+  attachments Json     @default("[]")
+  createdAt   DateTime @default(now())
+
+  @@index([studentId, date])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model SiteConfig {
+  id        Int      @id @default(1)
+  config    Json
+  updatedAt DateTime @updatedAt
+}
+
+enum Role {
+  TEACHER
+  STUDENT
+}
+
+enum SessionStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  OVERDUE
+}

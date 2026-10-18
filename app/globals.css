@@ -1,26 +1,208 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  --color-ink: #3A2A2E;
+  --color-ink-soft: #8A7076;
+  --color-primary: #D94F63;
+  --color-note-body: #5C4A4E;
+  --color-note-accent: #B23A4C;
+  --radius-glass: 24px;
+  --radius-pill: 999px;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+html[lang="fa"] body { font-family: "Vazirmatn", Tahoma, sans-serif; }
+html[lang="en"] body { font-family: ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif; }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: #FFF4DE;
+  color: var(--color-ink);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
 }
+
+::selection { background: rgba(217, 79, 99, 0.25); }
+
+*:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar { width: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(58, 42, 46, 0.18);
+  border-radius: 999px;
+  border: 3px solid #FFF4DE;
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(58, 42, 46, 0.32); }
+
+/* ── سیستم شیشه‌ای: سه سطح ── */
+.glass {
+  background: rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  box-shadow: 0 8px 28px rgba(214, 142, 120, 0.10);
+}
+
+.glass-strong {
+  background: rgba(255, 255, 255, 0.42);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  border: 1px solid rgba(255, 255, 255, 0.60);
+  box-shadow:
+    0 12px 40px rgba(214, 142, 120, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.glass-hover {
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+              background-color 0.35s;
+}
+.glass-hover:hover {
+  transform: translateY(-3px);
+  background: rgba(255, 255, 255, 0.32);
+  box-shadow: 0 18px 44px rgba(214, 142, 120, 0.22);
+}
+
+/* ── پس‌زمینه ── */
+.glass-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  background: linear-gradient(135deg, #FFF4DE 0%, #FFE8C4 100%);
+}
+.glass-bg::before,
+.glass-bg::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.55;
+  animation: float 22s ease-in-out infinite;
+}
+.glass-bg::before { width: 520px; height: 520px; background: #FFCED8; top: -120px; right: -120px; }
+.glass-bg::after  { width: 420px; height: 420px; background: #FFDDDD; bottom: -60px; left: -60px; animation-delay: -11s; }
+
+.blob-3 {
+  position: absolute;
+  width: 320px; height: 320px;
+  border-radius: 50%;
+  background: #FFE8C4;
+  filter: blur(90px);
+  opacity: 0.5;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  animation: float 26s ease-in-out infinite reverse;
+}
+
+@keyframes float {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(30px, -50px) scale(1.08); }
+  66% { transform: translate(-20px, 20px) scale(0.94); }
+}
+
+/* ── دفترچه مشق ── */
+.notebook-paper { background-color: #FFFDF7; }
+.notebook-rules {
+  background-image: repeating-linear-gradient(to bottom, transparent, transparent 31px, rgba(170, 140, 100, 0.18) 31px, rgba(170, 140, 100, 0.18) 32px);
+}
+.notebook-margin { background-color: rgba(232, 165, 165, 0.6); }
+.notebook-ring {
+  border-color: #C9A06A;
+  background-color: #FFFDF7;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+.notebook-chip { background-color: #F4E8D5; color: #6B4E2E; }
+
+/* ── آیکون‌های جهت‌دار ── */
+[dir="ltr"] .icon-flip { transform: scaleX(-1); }
+
+@media (prefers-reduced-motion: reduce) {
+  .glass-bg::before, .glass-bg::after, .blob-3 { animation: none; }
+}
+
+/* ═══════════════════════════════════════════════
+   🌙 لایه‌ی آداپتور تم تاریک
+   همه‌ی اورایدها این‌جا؛ کامپوننت‌ها دست‌نخورده
+   ═══════════════════════════════════════════════ */
+
+.dark {
+  --color-ink: #F3E9EC;
+  --color-ink-soft: #B79AA5;
+  --color-primary: #E8697B;
+  --color-note-body: #CBB6BE;
+  --color-note-accent: #E88C9A;
+}
+
+.dark body { background-color: #171014; }
+
+.dark .glass-bg { background: linear-gradient(135deg, #1B1216 0%, #24161B 100%); }
+.dark .glass-bg::before { background: #7E2E3E; opacity: 0.35; }
+.dark .glass-bg::after { background: #5A2430; opacity: 0.30; }
+.dark .blob-3 { background: #3A1D26; opacity: 0.5; }
+
+.dark .glass {
+  background: rgba(38, 26, 32, 0.55);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+}
+.dark .glass-strong {
+  background: rgba(46, 32, 39, 0.72);
+  border-color: rgba(255, 255, 255, 0.10);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+.dark .glass-hover:hover {
+  background: rgba(52, 37, 44, 0.80);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.50);
+}
+
+/* سطوح سفیدِ نیمه‌شفاف → سطوح روشنِ ظریف روی تاریکی */
+.dark .bg-white\/20 { background-color: rgba(255, 255, 255, 0.05); }
+.dark .bg-white\/25 { background-color: rgba(255, 255, 255, 0.06); }
+.dark .bg-white\/30 { background-color: rgba(255, 255, 255, 0.08); }
+.dark .bg-white\/40 { background-color: rgba(255, 255, 255, 0.10); }
+.dark .bg-white\/50 { background-color: rgba(255, 255, 255, 0.12); }
+.dark .bg-white\/55 { background-color: rgba(255, 255, 255, 0.14); }
+.dark .hover\:bg-white\/25:hover { background-color: rgba(255, 255, 255, 0.10); }
+.dark .hover\:bg-white\/35:hover { background-color: rgba(255, 255, 255, 0.12); }
+.dark .hover\:bg-white\/40:hover { background-color: rgba(255, 255, 255, 0.14); }
+.dark .border-white\/60 { border-color: rgba(255, 255, 255, 0.14); }
+.dark .border-white\/50 { border-color: rgba(255, 255, 255, 0.12); }
+.dark .border-white\/45 { border-color: rgba(255, 255, 255, 0.10); }
+.dark .divide-white\/30 > :not([hidden]) ~ :not([hidden]),
+.dark .divide-white\/40 > :not([hidden]) ~ :not([hidden]) { border-color: rgba(255, 255, 255, 0.08); }
+
+/* گرادیان‌های پاستلی → پاستلِ دودی */
+.dark .from-\[\#FFCED8\] { --tw-gradient-from: #4A2630; }
+.dark .to-\[\#FFDDDD\] { --tw-gradient-to: #3A1D26; }
+.dark .from-\[\#FFE8C4\] { --tw-gradient-from: #46301F; }
+.dark .to-\[\#FFF4DE\] { --tw-gradient-to: #33241A; }
+
+/* متن‌های رنگی روی سطوح تیره → نسخه‌ی روشنِ همون رنگ */
+.dark .text-\[\#B23A4C\] { color: #F09AA8; }
+.dark .text-\[\#8A5A22\] { color: #E7BC8A; }
+.dark .text-\[\#2F6B4F\] { color: #A6D8BA; }
+.dark .text-\[\#8A4A56\] { color: #E3B7C2; }
+.dark .border-\[rgba\(47\,107\,79\,0\.28\)\] { border-color: rgba(166, 216, 186, 0.35); }
+.dark .border-\[rgba\(178\,58\,76\,0\.28\)\] { border-color: rgba(240, 154, 168, 0.35); }
+.dark .border-\[rgba\(138\,90\,34\,0\.28\)\] { border-color: rgba(231, 188, 138, 0.35); }
+
+/* دفترچه در شب */
+.dark .notebook-paper { background-color: #241A1F; }
+.dark .notebook-rules {
+  background-image: repeating-linear-gradient(to bottom, transparent, transparent 31px, rgba(255, 255, 255, 0.07) 31px, rgba(255, 255, 255, 0.07) 32px);
+}
+.dark .notebook-margin { background-color: rgba(232, 140, 154, 0.35); }
+.dark .notebook-ring { border-color: #6B4E3A; background-color: #241A1F; }
+.dark .notebook-chip { background-color: rgba(255, 255, 255, 0.08); color: #E7BC8A; }
+
+/* اسکرول‌بار تاریک */
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: #171014;
+}
+.dark ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.25); }
