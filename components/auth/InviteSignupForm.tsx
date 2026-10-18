@@ -8,23 +8,19 @@ import { useRouter } from "@/i18n/navigation";
 import Button from "@/components/ui/Button";
 import { TextField } from "@/components/ui/Field";
 import { setupTeacher } from "@/lib/server/auth-actions";
-import { claimInvite } from "@/lib/server/invite-actions";
-import type { Awaited<ReturnType<typeof import("@/lib/server/invite-actions").getInviteInfo>>;
+import { claimInvite, type InviteInfo } from "@/lib/server/invite-actions";
 
 export default function InviteSignupForm({
   info,
   token,
-  locale,
-  firstRun,
 }: {
-  info: NonNullable<Awaited<ReturnType<typeof import("@/lib/server/invite-actions").getInviteInfo>>>;
+  info: InviteInfo;
   token: string;
-  locale: string;
-  firstRun: boolean;
+  locale?: string;
+  firstRun?: boolean;
 }) {
   const t = useTranslations("Invite");
   const router = useRouter();
-  const [name, setName] = useState(info.studentName);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -35,9 +31,6 @@ export default function InviteSignupForm({
     setLoading(true);
     setError(null);
 
-    // ابتدا حساب کاربری بساز (به عنوان STUDENT)
-    // برای ساده‌سازی: از setupTeacher استفاده می‌کنیم ولی role رو override می‌کنیم
-    // راه بهتر: یک action جدید بسازیم. فعلاً از loginAction بعد از signup استفاده می‌کنیم.
     const setupRes = await setupTeacher({ name: info.studentName, email, password });
     if (!setupRes.ok) {
       setError(setupRes.error);
@@ -45,7 +38,6 @@ export default function InviteSignupForm({
       return;
     }
 
-    // حالا claim می‌کنیم
     const claimRes = await claimInvite({ token, password });
     if (!claimRes.ok) {
       setError(claimRes.error);

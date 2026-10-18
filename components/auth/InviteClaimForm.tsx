@@ -7,17 +7,15 @@ import { Link2, Check } from "lucide-react";
 import { useRouter } from "@/i18n/navigation";
 import Button from "@/components/ui/Button";
 import { TextField } from "@/components/ui/Field";
-import { claimInvite } from "@/lib/server/invite-actions";
-import type { Awaited<ReturnType<typeof import("@/lib/server/invite-actions").getInviteInfo>>;
+import { claimInvite, type InviteInfo } from "@/lib/server/invite-actions";
 
 export default function InviteClaimForm({
   info,
   token,
-  locale,
 }: {
-  info: NonNullable<Awaited<ReturnType<typeof import("@/lib/server/invite-actions").getInviteInfo>>>;
+  info: InviteInfo;
   token: string;
-  locale: string;
+  locale?: string;
 }) {
   const t = useTranslations("Invite");
   const router = useRouter();

@@ -1,12 +1,20 @@
 "use server";
 
 import { randomBytes } from "crypto";
-import { prisma } from "@/lib/prisma";
-import { requireTeacherAction, getSession } from "@/lib/auth";
 import bcrypt from "bcryptjs";
-import { z } from "zod";
-import { createSessionToken, SESSION_COOKIE, SESSION_MAX_AGE } from "@/lib/session";
 import { cookies } from "next/headers";
+import { z } from "zod";
+import { prisma } from "@/lib/prisma";
+import { getSession, requireTeacherAction } from "@/lib/auth";
+import { createSessionToken, SESSION_COOKIE, SESSION_MAX_AGE } from "@/lib/session";
+
+export type InviteInfo = {
+  studentId: string;
+  studentName: string;
+  level: string;
+  term: string;
+  hasAccount: boolean;
+};
 
 export async function generateInviteLink(studentId: string): Promise<{ token: string } | { error: string }> {
   await requireTeacherAction();
@@ -31,7 +39,7 @@ export async function revokeInviteLink(studentId: string): Promise<{ ok: boolean
   return { ok: true };
 }
 
-export async function getInviteInfo(token: string) {
+export async function getInviteInfo(token: string): Promise<InviteInfo | null> {
   const student = await prisma.student.findUnique({ where: { inviteToken: token } });
   if (!student) return null;
   return {
@@ -41,6 +49,15 @@ export async function getInviteInfo(token: string) {
     term: student.term ?? "—",
     hasAccount: !!student.userId,
   };
+}
+
+export async function getStudentInviteToken(studentId: string): Promise<string | null> {
+  await requireTeacherAction();
+  const student = await prisma.student.findUnique({
+    where: { id: studentId },
+    select: { inviteToken: true },
+  });
+  return student?.inviteToken ?? null;
 }
 
 const claimSchema = z.object({
@@ -82,13 +99,4 @@ export async function claimInvite(input: unknown): Promise<{ ok: true } | { ok: 
   });
 
   return { ok: true };
-}
-
-export async function getStudentInviteToken(studentId: string): Promise<string | null> {
-  await requireTeacherAction();
-  const student = await prisma.student.findUnique({
-    where: { id: studentId },
-    select: { inviteToken: true },
-  });
-  return student?.inviteToken ?? null;
 }
