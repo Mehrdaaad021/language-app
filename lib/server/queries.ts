@@ -1,21 +1,20 @@
-import type { Attachment } from "@/lib/types";
 import { prisma } from "@/lib/prisma";
-import type { Note, Payment, Session, Student } from "@/lib/types";
-
-const day = (d: Date) => d.toISOString().slice(0, 10);
-const timeOf = (d: Date) => d.toISOString().slice(11, 16);
-
-const SESSION_STATUS = { SCHEDULED: "upcoming", COMPLETED: "completed", CANCELLED: "cancelled" } as const;
-const PAY_STATUS = { PAID: "paid", PENDING: "pending", OVERDUE: "pending" } as const;
+import { getTeacherWorkspace } from "./workspace";
+import { signAttachments } from "./upload-actions";
 
 export async function getStudentBundle(studentId: string) {
-  const [student, sessions, payments, notes] = await Promise.all([
-    prisma.student.findUnique({ where: { id: studentId } }),
-    prisma.session.findMany({ where: { studentId }, include: { student: true }, orderBy: { date: "asc" } }),
-    prisma.payment.findMany({ where: { studentId }, include: { student: true }, orderBy: { date: "desc" } }),
-    prisma.note.findMany({ where: { studentId }, orderBy: { date: "desc" } }),
-  ]);
+  // رفع IDOR: فقط معلمِ صاحب workspace می‌تونه ببینه
+  const ctx = await getTeacherWorkspace();
+  if (!ctx) return null;
 
+  const student = await prisma.student.findFirst({
+    where: { id: studentId, workspaceId: ctx.workspaceId },
+    include: {
+      sessions: { orderBy: { date: "desc" } },
+      payments: { orderBy: { date: "desc" } },
+      notes: { orderBy: { date: "desc" } },
+    },
+  });
   if (!student) return null;
 
   return {
@@ -24,43 +23,80 @@ export async function getStudentBundle(studentId: string) {
       name: student.name,
       level: student.level ?? "—",
       term: student.term ?? "—",
-      active: student.active,
       phone: student.phone ?? "",
-    } as Student,
-    sessions: sessions.map(
-      (s): Session => ({
-        id: s.id,
-        studentName: s.student.name,
-        date: day(s.date),
-        time: timeOf(s.date),
-        topic: s.topic ?? "",
-        status: SESSION_STATUS[s.status],
-      })
-    ),
-    payments: payments.map(
-      (p): Payment => ({
-        id: p.id,
-        studentName: p.student.name,
-        amount: p.amount,
-        date: day(p.date),
-        status: PAY_STATUS[p.status],
-      })
-    ),
-    notes: notes.map(
-      (n): Note => ({
+    },
+    sessions: student.sessions.map((s) => ({
+      id: s.id,
+      date: s.date.toISOString().split("T")[0],
+      time: s.date.toISOString().split("T")[1].slice(0, 5),
+      topic: s.topic ?? "",
+      status: (s.status === "SCHEDULED" ? "upcoming" : s.status === "COMPLETED" ? "completed" : "cancelled") as
+        | "upcoming"
+        | "completed"
+        | "cancelled",
+    })),
+    payments: student.payments.map((p) => ({
+      id: p.id,
+      amount: p.amount,
+      date: p.date.toISOString().split("T")[0],
+      status: (p.status === "PAID" ? "paid" : "pending") as "paid" | "pending",
+    })),
+    notes: await Promise.all(
+      student.notes.map(async (n) => ({
         id: n.id,
         studentId: n.studentId,
         title: n.title,
         content: n.content,
-        date: day(n.date),
-        attachments: (n.attachments as Attachment[]) ?? [],
-      })
+        date: n.date.toISOString().split("T")[0],
+        attachments: await signAttachments(n.attachments),
+      }))
     ),
   };
 }
 
 export async function loadStudentArea(userId: string) {
-  const student = await prisma.student.findUnique({ where: { userId } });
+  const student = await prisma.student.findUnique({
+    where: { userId },
+    include: {
+      sessions: { orderBy: { date: "desc" } },
+      payments: { orderBy: { date: "desc" } },
+      notes: { orderBy: { date: "desc" } },
+    },
+  });
   if (!student) return null;
-  return getStudentBundle(student.id);
+
+  return {
+    student: {
+      id: student.id,
+      name: student.name,
+      level: student.level ?? "—",
+      term: student.term ?? "—",
+    },
+    sessions: student.sessions.map((s) => ({
+      id: s.id,
+      date: s.date.toISOString().split("T")[0],
+      time: s.date.toISOString().split("T")[1].slice(0, 5),
+      topic: s.topic ?? "",
+      status: (s.status === "SCHEDULED" ? "upcoming" : s.status === "COMPLETED" ? "completed" : "cancelled") as
+        | "upcoming"
+        | "completed"
+        | "cancelled",
+    })),
+    payments: student.payments.map((p) => ({
+      id: p.id,
+      amount: p.amount,
+      date: p.date.toISOString().split("T")[0],
+      status: (p.status === "PAID" ? "paid" : "pending") as "paid" | "pending",
+    })),
+    notes: await Promise.all(
+      student.notes.map(async (n) => ({
+        id: n.id,
+        studentId: n.studentId,
+        title: n.title,
+        content: n.content,
+        date: n.date.toISOString().split("T")[0],
+        attachments: await signAttachments(n.attachments),
+      }))
+    ),
+  };
 }

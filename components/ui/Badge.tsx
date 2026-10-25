@@ -1,20 +1,28 @@
 import type { ReactNode } from "react";
 
-interface BadgeProps {
+type Tone = "success" | "info" | "warn" | "danger" | "neutral";
+
+const TONES: Record<Tone, string> = {
+  success: "bg-[var(--c-success-bg)] text-[var(--c-success)]",
+  info: "bg-[var(--c-pink)] text-[var(--c-primary)]",
+  warn: "bg-[var(--c-warn-bg)] text-[var(--c-warn)]",
+  danger: "bg-[var(--c-danger-bg)] text-[var(--c-danger)]",
+  neutral: "bg-[var(--c-surface-2)] text-[var(--c-ink-soft)]",
+};
+
+export default function Badge({
+  tone = "neutral",
+  className = "",
+  children,
+}: {
+  tone?: Tone;
+  className?: string;
   children: ReactNode;
-  tone?: "success" | "danger" | "warn" | "info";
-}
-
-const TONES = {
-  success: "bg-[rgba(122,178,146,0.20)] text-[#2F6B4F] border-[rgba(47,107,79,0.28)]",
-  danger: "bg-[rgba(217,79,99,0.14)] text-[#B23A4C] border-[rgba(178,58,76,0.28)]",
-  warn: "bg-[rgba(214,142,60,0.18)] text-[#8A5A22] border-[rgba(138,90,34,0.28)]",
-  info: "bg-white/40 text-[var(--color-ink)] border-white/60",
-} as const;
-
-export default function Badge({ children, tone = "info" }: BadgeProps) {
+}) {
   return (
-    <span className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-[11px] font-bold backdrop-blur-md ${TONES[tone]}`}>
+    <span
+      className={`inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-extrabold ${TONES[tone]} ${className}`}
+    >
       {children}
     </span>
   );

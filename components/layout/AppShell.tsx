@@ -20,8 +20,9 @@ import LogoutButton from "@/components/auth/LogoutButton";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import CommandPalette from "@/components/CommandPalette";
 import NotificationBell from "@/components/NotificationBell";
+import DockNav from "@/components/layout/DockNav";
 
-const NAV = [
+const NAV_ALL = [
   { icon: LayoutDashboard, key: "dashboard", href: "/dashboard" },
   { icon: BarChart3, key: "landing", href: "/dashboard/landing-editor" },
   { icon: GraduationCap, key: "students", href: "/students" },
@@ -37,15 +38,20 @@ const spring = { type: "spring", stiffness: 380, damping: 30 } as const;
 export default function AppShell({
   children,
   user,
+  isOwner = false,
 }: {
   children: ReactNode;
   user?: { name: string; email: string };
+  isOwner?: boolean;
 }) {
   const tn = useTranslations("Nav");
   const t = useTranslations("Dashboard");
   const tp = useTranslations("Palette");
   const [paletteOpen, setPaletteOpen] = useState(false);
   const pathname = usePathname();
+
+  // ویرایشگر ویترین فقط برای مالک اصلی
+  const nav = NAV_ALL.filter((item) => item.key !== "landing" || isOwner);
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
 
@@ -71,19 +77,25 @@ export default function AppShell({
             <LocaleSwitcher compact />
           </div>
         </div>
+
+        {/* ناوبری موبایل — پیِل فعال مارون تیره */}
         <nav className="glass mt-2 flex justify-between rounded-2xl px-2 py-1.5">
-          {NAV.map((item) => (
+          {nav.map((item) => (
             <Link
               key={item.key}
               href={item.href}
               prefetch
               aria-label={tn(item.key)}
               className={`relative flex h-10 w-10 items-center justify-center rounded-xl ${
-                isActive(item.href) ? "text-[var(--color-primary)]" : "text-[var(--color-ink-soft)]"
+                isActive(item.href) ? "text-[#f6eede]" : "text-[var(--color-ink-soft)]"
               }`}
             >
               {isActive(item.href) && (
-                <motion.span layoutId="nav-mobile" className="absolute inset-0 rounded-xl bg-white/50" transition={spring} />
+                <motion.span
+                  layoutId="nav-mobile"
+                  className="absolute inset-0 rounded-xl bg-[#4a2430]"
+                  transition={spring}
+                />
               )}
               <item.icon size={18} className="relative z-10" />
             </Link>
@@ -92,7 +104,7 @@ export default function AppShell({
       </div>
 
       <div className="flex min-h-screen">
-        {/* منوی کناری */}
+        {/* منوی کناری دسکتاپ */}
         <aside className="hidden w-72 p-6 md:block">
           <div className="glass-strong flex h-full flex-col rounded-[28px] p-6">
             <div className="mb-6 flex items-center gap-3">
@@ -122,7 +134,7 @@ export default function AppShell({
               variants={{ hidden: {}, show: { transition: { staggerChildren: 0.05, delayChildren: 0.15 } } }}
               className="flex flex-1 flex-col gap-1.5 text-sm font-semibold"
             >
-              {NAV.map((item) => (
+              {nav.map((item) => (
                 <motion.div
                   key={item.key}
                   variants={{ hidden: { opacity: 0, x: -14 }, show: { opacity: 1, x: 0, transition: spring } }}
@@ -132,20 +144,20 @@ export default function AppShell({
                     prefetch
                     className={`relative flex items-center gap-3 rounded-2xl px-4 py-3 transition-colors ${
                       isActive(item.href)
-                        ? "text-[var(--color-ink)]"
+                        ? "text-[#f6eede]"
                         : "text-[var(--color-ink-soft)] hover:text-[var(--color-ink)]"
                     }`}
                   >
                     {isActive(item.href) && (
                       <motion.span
                         layoutId="nav-pill"
-                        className="absolute inset-0 rounded-2xl bg-white/55 shadow-[0_8px_24px_-12px_rgba(58,42,46,0.35)]"
+                        className="absolute inset-0 rounded-2xl bg-[#4a2430] shadow-[0_10px_26px_-12px_rgba(74,36,48,0.55)]"
                         transition={spring}
                       />
                     )}
                     <item.icon
                       size={18}
-                      className={`relative z-10 ${isActive(item.href) ? "text-[var(--color-primary)]" : ""}`}
+                      className={`relative z-10 ${isActive(item.href) ? "text-[#f2a9bc]" : ""}`}
                     />
                     <span className="relative z-10">{tn(item.key)}</span>
                   </Link>
@@ -177,8 +189,8 @@ export default function AppShell({
           </div>
         </aside>
 
-        {/* محتوا */}
-        <main className="flex-1 p-5 md:p-10">
+        {/* محتوا — با فضای خالی پایین برای داک موبایل */}
+        <main className="flex-1 p-5 pb-36 md:p-10">
           <AnimatePresence mode="wait">
             <motion.div
               key={pathname}
@@ -192,6 +204,9 @@ export default function AppShell({
           </AnimatePresence>
         </main>
       </div>
+
+      {/* داک شناور موبایل */}
+      <DockNav onQuickAdd={() => setPaletteOpen(true)} />
 
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
     </MotionConfig>

@@ -1,41 +1,27 @@
 "use client";
 
-import type { InputHTMLAttributes, ReactNode, SelectHTMLAttributes } from "react";
+import type { InputHTMLAttributes } from "react";
 
-function FieldShell({ label, error, children }: { label: string; error?: string; children: ReactNode }) {
+type Props = InputHTMLAttributes<HTMLInputElement> & {
+  label?: string;
+  error?: string;
+};
+
+export function TextField({ label, error, className = "", ...rest }: Props) {
   return (
-    <label className="block">
-      <span className="mb-1.5 block text-xs font-bold text-[var(--color-ink-soft)]">{label}</span>
-      {children}
-      {error && <span className="mt-1.5 block text-[11px] font-bold text-[#B23A4C]">{error}</span>}
-    </label>
-  );
-}
-
-function controlClass(error?: string) {
-  return `w-full rounded-2xl border bg-white/40 px-4 py-2.5 text-sm font-medium text-[var(--color-ink)] backdrop-blur-md transition placeholder:text-[var(--color-ink-soft)]/60 focus:outline-none ${
-    error
-      ? "border-[rgba(178,58,76,0.5)] focus:border-[#B23A4C] focus:bg-white/55"
-      : "border-white/60 focus:border-white/90 focus:bg-white/55"
-  }`;
-}
-
-export function TextField({
-  label, error, ...props
-}: { label: string; error?: string } & InputHTMLAttributes<HTMLInputElement>) {
-  return (
-    <FieldShell label={label} error={error}>
-      <input className={controlClass(error)} {...props} />
-    </FieldShell>
-  );
-}
-
-export function SelectField({
-  label, error, children, ...props
-}: { label: string; error?: string; children: ReactNode } & SelectHTMLAttributes<HTMLSelectElement>) {
-  return (
-    <FieldShell label={label} error={error}>
-      <select className={controlClass(error)} {...props}>{children}</select>
-    </FieldShell>
+    <div className={className}>
+      {label && (
+        <label className="mb-1 block text-xs font-extrabold text-[var(--c-ink)]">
+          {label}
+        </label>
+      )}
+      <input
+        className={`input-field ${error ? "!border-[var(--c-danger)]" : ""}`}
+        {...rest}
+      />
+      {error && (
+        <p className="mt-1 text-[10px] font-bold text-[var(--c-danger)]">{error}</p>
+      )}
+    </div>
   );
 }

@@ -1,44 +1,38 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
-import { CircleCheck } from "lucide-react";
 import { createContext, useCallback, useContext, useState, type ReactNode } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 
-const ToastContext = createContext<(message: string) => void>(() => {});
+type ToastFn = (msg: string) => void;
+const ToastContext = createContext<ToastFn>(() => {});
 
-export const useToast = () => useContext(ToastContext);
-
-type ToastItem = { id: number; message: string };
+export function useToast(): ToastFn {
+  return useContext(ToastContext);
+}
 
 export function ToastProvider({ children }: { children: ReactNode }) {
-  const [toasts, setToasts] = useState<ToastItem[]>([]);
+  const [msg, setMsg] = useState<string | null>(null);
 
-  const push = useCallback((message: string) => {
-    const id = Date.now() + Math.random();
-    setToasts((t) => [...t, { id, message }]);
-    setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 3200);
+  const toast = useCallback((m: string) => {
+    setMsg(m);
+    window.setTimeout(() => setMsg(null), 2600);
   }, []);
 
   return (
-    <ToastContext.Provider value={push}>
+    <ToastContext.Provider value={toast}>
       {children}
-      <div className="pointer-events-none fixed bottom-6 left-1/2 z-[60] -translate-x-1/2">
-        <AnimatePresence>
-          {toasts.map((t) => (
-            <motion.div
-              key={t.id}
-              initial={{ opacity: 0, y: 24, scale: 0.9 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 12, scale: 0.95 }}
-              transition={{ type: "spring", stiffness: 400, damping: 28 }}
-              className="glass-strong mb-2 flex items-center gap-2 rounded-full px-5 py-3 text-sm font-bold"
-            >
-              <CircleCheck size={17} className="text-[#2F6B4F]" />
-              {t.message}
-            </motion.div>
-          ))}
-        </AnimatePresence>
-      </div>
+      <AnimatePresence>
+        {msg && (
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 16 }}
+            className="fixed bottom-24 left-1/2 z-[60] -translate-x-1/2 rounded-full bg-[var(--c-primary)] px-5 py-2.5 text-xs font-extrabold text-[var(--c-on-primary)] shadow-xl md:bottom-6"
+          >
+            {msg}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </ToastContext.Provider>
   );
 }

@@ -1,12 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useLocale, useTranslations } from "next-intl";
-import { useTheme } from "@/components/ThemeProvider";
-import { AnimatePresence, motion } from "framer-motion";
+import React, { useMemo } from "react";
+import { useTranslations } from "next-intl";
+import { motion, AnimatePresence } from "framer-motion";
 import {
-  Search, LayoutDashboard, GraduationCap, CalendarDays, Wallet, NotebookPen,
-  UserPlus, CalendarPlus, CircleDollarSign, Moon, Languages, CornerDownLeft, BarChart3,
+  Search, Home, Users, Calendar, Wallet, FileText, BarChart3,
+  Palette, Languages, PlusCircle, Settings, type LucideIcon,
 } from "lucide-react";
 import { useRouter, usePathname } from "@/i18n/navigation";
 import { useAppData } from "@/lib/store";
@@ -15,160 +14,124 @@ type Item = {
   id: string;
   group: string;
   label: string;
-  icon: React.ComponentType<{ size?: number | string; className?: string }>;
+  icon: LucideIcon;
   run: () => void;
-  keywords?: string;
 };
 
-export default function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
+export default function CommandPalette({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+}) {
   const t = useTranslations("Palette");
-  const tn = useTranslations("Nav");
-  const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
-  const { theme, setTheme } = useTheme();
-  const { students } = useAppData();
-  const [query, setQuery] = useState("");
-  const [active, setActive] = useState(0);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const { data, loading } = useAppData();
+  const [q, setQ] = React.useState("");
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
-        e.preventDefault();
-        onOpenChange(!open);
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open, onOpenChange]);
-
-  useEffect(() => {
-    if (open) {
-      setQuery("");
-      setActive(0);
-      setTimeout(() => inputRef.current?.focus(), 60);
-    }
-  }, [open]);
+  const students = data?.students ?? [];
 
   const items = useMemo<Item[]>(() => {
-    const nav: Item[] = [
-      { id: "n1", group: t("navigation"), label: tn("dashboard"), icon: LayoutDashboard, run: () => router.push("/dashboard") },
-      { id: "n2", group: t("navigation"), label: tn("students"), icon: GraduationCap, run: () => router.push("/students") },
-      { id: "n3", group: t("navigation"), label: tn("sessions"), icon: CalendarDays, run: () => router.push("/sessions") },
-      { id: "n4", group: t("navigation"), label: tn("payments"), icon: Wallet, run: () => router.push("/payments") },
-      { id: "n5", group: t("navigation"), label: tn("notes"), icon: NotebookPen, run: () => router.push("/notes") },
-      { id: "n6", group: t("navigation"), label: tn("analytics"), icon: BarChart3, run: () => router.push("/analytics") },
+    if (loading) return [];
+    return [
+      { id: "n1", group: t("navigation"), label: "Dashboard", icon: Home, run: () => router.push("/dashboard") },
+      { id: "n2", group: t("navigation"), label: "Students", icon: Users, run: () => router.push("/students") },
+      { id: "n3", group: t("navigation"), label: "Sessions", icon: Calendar, run: () => router.push("/sessions") },
+      { id: "n4", group: t("navigation"), label: "Payments", icon: Wallet, run: () => router.push("/payments") },
+      { id: "n5", group: t("navigation"), label: "Notes", icon: FileText, run: () => router.push("/notes") },
+      { id: "n6", group: t("navigation"), label: "Analytics", icon: BarChart3, run: () => router.push("/analytics") },
+      { id: "n7", group: t("navigation"), label: "Settings", icon: Settings, run: () => router.push("/settings") },
+      { id: "a1", group: t("actions"), label: t("newStudent"), icon: PlusCircle, run: () => router.push("/students") },
+      { id: "a2", group: t("actions"), label: t("newSession"), icon: PlusCircle, run: () => router.push("/sessions") },
+      { id: "a3", group: t("actions"), label: t("newPayment"), icon: PlusCircle, run: () => router.push("/payments") },
+      { id: "a4", group: t("actions"), label: t("toggleTheme"), icon: Palette, run: () => document.documentElement.classList.toggle("dark") },
+      { id: "a5", group: t("actions"), label: t("switchLocale"), icon: Languages, run: () => router.replace(pathname, { locale: pathname.startsWith("/fa") ? "en" : "fa" }) },
     ];
-    const actions: Item[] = [
-      { id: "a1", group: t("actions"), label: t("newStudent"), icon: UserPlus, run: () => router.push("/students?new=1") },
-      { id: "a2", group: t("actions"), label: t("newSession"), icon: CalendarPlus, run: () => router.push("/sessions?new=1") },
-      { id: "a3", group: t("actions"), label: t("newPayment"), icon: CircleDollarSign, run: () => router.push("/payments?new=1") },
-      { id: "a4", group: t("actions"), label: t("toggleTheme"), icon: Moon, run: () => setTheme(theme === "light" ? "dark" : "light") },
-      { id: "a5", group: t("actions"), label: t("switchLocale"), icon: Languages, run: () => router.replace(pathname, { locale: locale === "fa" ? "en" : "fa" }) },
-    ];
-    const studs: Item[] = students.map((s) => ({
-      id: `s-${s.id}`,
-      group: t("students"),
-      label: s.name,
-      icon: GraduationCap,
-      run: () => router.push(`/students/${s.id}`),
-      keywords: s.level,
-    }));
-    return [...nav, ...actions, ...studs];
-  }, [t, tn, router, pathname, locale, students, setTheme, theme]);
+  }, [loading, t, router, pathname]);
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return items;
-    return items.filter((i) => i.label.toLowerCase().includes(q) || (i.keywords ?? "").toLowerCase().includes(q));
-  }, [items, query]);
+  const studs: Item[] = students.map((s) => ({
+    id: `s-${s.id}`,
+    group: t("students"),
+    label: s.name,
+    icon: Users,
+    run: () => router.push(`/students/${s.id}`),
+  }));
 
-  useEffect(() => setActive(0), [query]);
+  const all = [...items, ...studs];
+  const filtered = q
+    ? all.filter((i) => i.label.toLowerCase().includes(q.toLowerCase()))
+    : all;
 
-  const runItem = (item: Item) => {
+  const run = (it: Item) => {
     onOpenChange(false);
-    item.run();
+    setQ("");
+    it.run();
   };
-
-  const onKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "ArrowDown") { e.preventDefault(); setActive((a) => Math.min(a + 1, filtered.length - 1)); }
-    if (e.key === "ArrowUp") { e.preventDefault(); setActive((a) => Math.max(a - 1, 0)); }
-    if (e.key === "Enter" && filtered[active]) { e.preventDefault(); runItem(filtered[active]); }
-    if (e.key === "Escape") onOpenChange(false);
-  };
-
-  let lastGroup = "";
 
   return (
     <AnimatePresence>
       {open && (
-        <div className="fixed inset-0 z-[70] flex items-start justify-center p-4 pt-[12vh]">
-          <motion.button
-            aria-label="close"
-            className="absolute inset-0 cursor-default bg-[#3A2A2E]/40 backdrop-blur-sm"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => onOpenChange(false)}
-          />
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 flex items-start justify-center bg-black/30 p-4 backdrop-blur-sm"
+          onClick={() => onOpenChange(false)}
+        >
           <motion.div
-            initial={{ opacity: 0, y: -16, scale: 0.97 }}
+            initial={{ opacity: 0, y: -20, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -12, scale: 0.98 }}
-            transition={{ type: "spring", stiffness: 400, damping: 30 }}
-            className="glass-strong relative w-full max-w-lg overflow-hidden rounded-[24px]"
+            exit={{ opacity: 0, y: -20, scale: 0.96 }}
+            transition={{ type: "spring", stiffness: 300, damping: 26 }}
+            onClick={(e) => e.stopPropagation()}
+            className="glass-strong mt-24 w-full max-w-xl rounded-[24px] p-2 shadow-2xl"
           >
-            <div className="flex items-center gap-3 border-b border-white/40 px-5 py-4">
-              <Search size={17} className="text-[var(--color-ink-soft)]" />
+            <div className="flex items-center gap-3 px-4 py-3">
+              <Search size={16} className="text-[var(--color-ink-soft)]" />
               <input
-                ref={inputRef}
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                onKeyDown={onKeyDown}
+                autoFocus
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
                 placeholder={t("placeholder")}
-                className="w-full bg-transparent text-sm font-medium text-[var(--color-ink)] placeholder:text-[var(--color-ink-soft)]/70 focus:outline-none"
+                className="flex-1 bg-transparent text-sm font-medium outline-none"
               />
-              <kbd className="rounded-lg bg-white/40 px-2 py-1 text-[10px] font-bold text-[var(--color-ink-soft)]">ESC</kbd>
+              <kbd className="rounded-md bg-white/40 px-2 py-0.5 text-[10px] font-extrabold">Esc</kbd>
             </div>
 
-            <div className="max-h-[46vh] overflow-y-auto p-2">
-              {filtered.length === 0 && (
-                <p className="p-6 text-center text-xs font-bold text-[var(--color-ink-soft)]">{t("noResults")}</p>
-              )}
-              {filtered.map((item, i) => {
-                const showGroup = item.group !== lastGroup;
-                lastGroup = item.group;
-                return (
-                  <div key={item.id}>
-                    {showGroup && (
-                      <p className="px-3 pb-1 pt-3 text-[10px] font-extrabold uppercase tracking-wide text-[var(--color-ink-soft)]">
-                        {item.group}
-                      </p>
-                    )}
-                    <button
-                      onClick={() => runItem(item)}
-                      onMouseEnter={() => setActive(i)}
-                      className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-start text-sm font-bold transition ${
-                        i === active ? "bg-white/50 text-[var(--color-ink)]" : "text-[var(--color-ink-soft)]"
-                      }`}
-                    >
-                      <item.icon size={16} />
-                      <span className="flex-1 truncate">{item.label}</span>
-                      {i === active && <CornerDownLeft size={13} className="opacity-60" />}
-                    </button>
+            <div className="max-h-[50vh] overflow-y-auto px-2 pb-2">
+              {filtered.length === 0 ? (
+                <p className="px-4 py-8 text-center text-xs text-[var(--color-ink-soft)]">
+                  {t("noResults")}
+                </p>
+              ) : (
+                Object.entries(
+                  filtered.reduce<Record<string, Item[]>>((acc, it) => {
+                    (acc[it.group] ||= []).push(it);
+                    return acc;
+                  }, {})
+                ).map(([group, list]) => (
+                  <div key={group} className="py-1">
+                    <p className="px-4 py-2 text-[10px] font-extrabold uppercase tracking-wider text-[var(--color-ink-soft)]">
+                      {group}
+                    </p>
+                    {list.map((it) => (
+                      <button
+                        key={it.id}
+                        onClick={() => run(it)}
+                        className="flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-bold transition hover:bg-white/35"
+                      >
+                        <it.icon size={16} className="shrink-0 text-[var(--color-ink-soft)]" />
+                        <span className="flex-1 text-start">{it.label}</span>
+                      </button>
+                    ))}
                   </div>
-                );
-              })}
-            </div>
-
-            <div className="flex items-center gap-4 border-t border-white/40 px-5 py-3 text-[10px] font-bold text-[var(--color-ink-soft)]">
-              <span>↑↓ {t("navigate")}</span>
-              <span>↵ {t("select")}</span>
-              <span>{t("hint")}</span>
+                ))
+              )}
             </div>
           </motion.div>
-        </div>
+        </motion.div>
       )}
     </AnimatePresence>
   );

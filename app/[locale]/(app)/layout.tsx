@@ -2,6 +2,7 @@
 import { redirect } from "next/navigation";
 import AppShell from "@/components/layout/AppShell";
 import { getSession } from "@/lib/auth";
+import { isOwner } from "@/lib/server/owner-actions";
 
 export default async function AppLayout({
   params,
@@ -14,8 +15,13 @@ export default async function AppLayout({
   const session = await getSession();
   if (!session || session.role !== "TEACHER") redirect(`/${locale}/login`);
 
+  const owner = await isOwner();
+
   return (
-    <AppShell user={{ name: session.name ?? session.email, email: session.email }}>
+    <AppShell
+      user={{ name: session.name ?? session.email, email: session.email }}
+      isOwner={owner}
+    >
       {children}
     </AppShell>
   );

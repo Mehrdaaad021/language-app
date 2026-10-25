@@ -17,8 +17,8 @@
   "Dashboard": {
     "brand": "Class Assistant",
     "tagline": "Language class management",
-    "greeting": "Hello, Coach Mehrdad 👋",
-    "subtitle": "You have 3 sessions today; first at 5:00 PM",
+    "greeting": "Hello, {name} 👋",
+    "subtitle": "Your classes at a glance",
     "newSession": "New session +",
     "activeStudents": "Active students",
     "sessionsThisWeek": "Sessions this week",
@@ -113,6 +113,12 @@
     "twoFactorHint": "The code changes every 30 seconds",
     "verifyCode": "Verify & sign in",
     "cancelLogin": "Cancel and sign out",
+    "changePasswordTitle": "Change Password",
+    "changePasswordSubtitle": "For better security, please choose a new password",
+    "oldPassword": "Current Password",
+    "newPassword": "New Password",
+    "confirmPassword": "Confirm New Password",
+    "changePassword": "Change Password",
     "errors": {
       "invalid": "The provided information is invalid",
       "invalidCredentials": "Wrong email or password",
@@ -121,7 +127,13 @@
       "tooMany": "Too many attempts; wait 10 minutes",
       "invalidCode": "Invalid 6-digit code",
       "notPending": "Not awaiting 2FA",
-      "notEnabled": "2FA is not enabled"
+      "notEnabled": "2FA is not enabled",
+      "passwordsDontMatch": "Passwords don't match",
+      "wrongPassword": "Wrong current password",
+      "passwordTooShort": "Password must be at least 8 characters",
+      "notAuthenticated": "Not signed in",
+      "userNotFound": "User not found",
+            "serverError": "Server error; please try again in a moment"
     },
     "studentPortalTitle": "Student Portal",
     "studentPortalBody": "Your personal space — sessions, payments and your notebook."
@@ -470,7 +482,43 @@
       "invalidCode": "Invalid 6-digit code",
       "notPending": "Setup process is not active",
       "notEnabled": "2FA is not enabled",
-      "wrongPassword": "Wrong password"
+      "wrongPassword": "Wrong password",
+      "backupCodesRemaining": "{{count}} backup codes remaining",
+"regenerateBackupCodes": "Regenerate codes",
+"backupCodesTitle": "Backup codes",
+"backupCodesHint": "Save these 10 one-time codes in a safe place. If you lose your phone, you can use them to sign in.",
+"viewBackupCodes": "View backup codes",
+"copyAllCodes": "Copy all",
+"copied": "Copied!",
+"backupCodesRegenerated": "Backup codes regenerated",
+"regenerateTitle": "Regenerate backup codes",
+"regenerateHint": "Enter your password to generate 10 new codes. Old codes will be invalidated.",
+"confirmRegenerate": "Regenerate"
     }
+  },
+  "Admin": {
+    "title": "Admin Panel",
+    "subtitle": "Manage system teachers",
+    "teachers": "Teachers",
+    "createTeacher": "Create New Teacher",
+    "noTeachers": "No teachers registered yet",
+    "2faEnabled": "2FA Enabled",
+    "resetPassword": "Reset Password",
+    "confirmDelete": "Are you sure? This action cannot be undone.",
+    "teacherDeleted": "Teacher deleted",
+    "teacherCreated": "New teacher created. Temporary password:",
+    "generatedPassword": "Generated Password",
+    "passwordHint": "Give this password to the teacher. They will be required to change it on first login.",
+    "passwordCopied": "Password copied to clipboard",
+    "passwordReset": "Password Reset",
+    "passwordResetHint": "New password for this teacher:",
+    "email": "Email",
+    "name": "Name",
+    "create": "Create",
+    "cancel": "Cancel",
+    "done": "Done",
+    "deleteTeacher": "Delete teacher",
+    "copyPassword": "Copy password",
+        "loadError": "Failed to load teachers"
   }
 }

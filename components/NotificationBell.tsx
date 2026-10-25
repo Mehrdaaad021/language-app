@@ -2,118 +2,154 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { AnimatePresence, motion } from "framer-motion";
-import { Bell, CalendarClock, Wallet } from "lucide-react";
-import { Link } from "@/i18n/navigation";
+import { Bell, CheckCheck } from "lucide-react";
 import { getTeacherNotifications, type AppNotification } from "@/lib/server/notifications";
-import { useToast } from "@/components/ui/Toast";
 
-export default function NotificationBell({ compact = false }: { compact?: boolean }) {
+function readLS(key: string): string[] {
+  if (typeof window === "undefined") return [];
+  try {
+    return JSON.parse(window.localStorage.getItem(key) ?? "[]") as string[];
+  } catch {
+    return [];
+  }
+}
+
+const PANEL_W = 288;
+
+type PanelPos = { left: number; top?: number; bottom?: number };
+
+export default function NotificationBell({ compact }: { compact?: boolean }) {
   const t = useTranslations("Notifications");
-  const toast = useToast();
-  const [items, setItems] = useState<AppNotification[]>([]);
+  const btnRef = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
-  const known = useRef<Set<string> | null>(null);
+  const [pos, setPos] = useState<PanelPos | null>(null);
+  const [items, setItems] = useState<AppNotification[]>([]);
+  const [readIds, setReadIds] = useState<string[]>(() => readLS("lca_notif_read"));
 
-  const load = async (silent: boolean) => {
+  const load = async () => {
     try {
-      const next = await getTeacherNotifications();
-      if (known.current === null) {
-        known.current = new Set(next.map((n) => n.id));
-      } else {
-        const fresh = next.filter((n) => !known.current!.has(n.id));
-        known.current = new Set(next.map((n) => n.id));
-        if (!silent && fresh.length > 0) toast(t("newArrived", { count: fresh.length }));
+      const list = await getTeacherNotifications();
+      setItems(list);
+
+      const shown = readLS("lca_notif_shown");
+      const fresh = list.filter((n) => !shown.includes(n.id));
+      if (
+        fresh.length > 0 &&
+        typeof window !== "undefined" &&
+        "Notification" in window &&
+        Notification.permission === "granted"
+      ) {
+        fresh.slice(0, 3).forEach((n) =>
+          new Notification(t("newArrived", { count: String(fresh.length) }), { body: n.message })
+        );
       }
-      setItems(next);
+      if (typeof window !== "undefined" && fresh.length > 0) {
+        window.localStorage.setItem("lca_notif_shown", JSON.stringify([...shown, ...fresh.map((f) => f.id)]));
+      }
     } catch {
-      /* silent */
+      // بی‌صدا
     }
   };
 
   useEffect(() => {
-    load(true);
-    const iv = setInterval(() => load(false), 20000);
-    const onFocus = () => load(false);
-    window.addEventListener("focus", onFocus);
-    return () => {
-      clearInterval(iv);
-      window.removeEventListener("focus", onFocus);
-    };
+    load();
+    const iv = setInterval(load, 60_000);
+    return () => clearInterval(iv);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const unread = items.filter((i) => !readIds.includes(i.id)).length;
+
+  const toggle = async () => {
+    if (open) {
+      setOpen(false);
+      return;
+    }
+    if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "default") {
+      await Notification.requestPermission();
+    }
+    if (btnRef.current) {
+      const r = btnRef.current.getBoundingClientRect();
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+
+      // افقی: وسط دکمه، ولی همیشه داخل صفحه
+      const left = Math.min(Math.max(r.left + r.width / 2 - PANEL_W / 2, 8), vw - PANEL_W - 8);
+
+      // عمودی: اگه پایین جا نیست، بالا باز شو
+      const openUp = r.bottom + 360 > vh;
+      setPos(
+        openUp
+          ? { left, bottom: vh - r.top + 8 }
+          : { left, top: r.bottom + 8 }
+      );
+    }
+    setOpen(true);
+  };
+
+  const markAll = () => {
+    const ids = items.map((i) => i.id);
+    setReadIds(ids);
+    if (typeof window !== "undefined") window.localStorage.setItem("lca_notif_read", JSON.stringify(ids));
+  };
 
   return (
     <div className="relative">
       <button
-        onClick={() => setOpen((o) => !o)}
+        ref={btnRef}
+        type="button"
+        onClick={toggle}
         aria-label={t("bell")}
-        className={`glass relative flex shrink-0 items-center justify-center rounded-xl text-[var(--color-ink-soft)] transition hover:bg-white/40 hover:text-[var(--color-ink)] ${
-          compact ? "h-9 w-9" : "h-10 w-10"
-        }`}
+        className={`glass relative flex items-center justify-center rounded-xl transition hover:bg-white/40 ${compact ? "h-9 w-9" : "h-10 w-10"}`}
       >
         <Bell size={compact ? 15 : 17} />
-        {items.length > 0 && (
-          <motion.span
-            key={items.length}
-            initial={{ scale: 0.5 }}
-            animate={{ scale: 1 }}
-            style={{ height: 18, minWidth: 18 }}
-            className="absolute -end-1 -top-1 flex items-center justify-center rounded-full bg-[#D94F63] px-1 text-[9px] font-extrabold text-white"
-          >
-            {items.length}
-          </motion.span>
+        {unread > 0 && (
+          <span className="absolute -end-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-gradient-to-b from-[#E8697B] to-[#D94F63] px-1 text-[9px] font-extrabold text-white">
+            {unread}
+          </span>
         )}
       </button>
 
-      <AnimatePresence>
-        {open && (
-          <>
-            <button
-              className="fixed inset-0 z-40 cursor-default"
-              aria-label="close"
-              onClick={() => setOpen(false)}
-            />
-            <motion.div
-              initial={{ opacity: 0, y: -8, scale: 0.97 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -6, scale: 0.98 }}
-              transition={{ type: "spring", stiffness: 400, damping: 30 }}
-              className="glass-strong absolute z-50 w-80 max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-2xl p-2 top-12 end-0 md:top-auto md:bottom-12 md:end-auto md:start-0"
-            >
-              <p className="px-3 py-2 text-[10px] font-extrabold uppercase tracking-wide text-[var(--color-ink-soft)]">
-                {t("bell")}
-              </p>
-              {items.length === 0 ? (
-                <p className="p-6 text-center text-xs font-bold text-[var(--color-ink-soft)]">{t("empty")}</p>
-              ) : (
-                <ul className="flex max-h-72 flex-col gap-1 overflow-y-auto">
-                  {items.map((n) => (
-                    <li key={n.id}>
-                      <Link
-                        href={n.href}
-                        onClick={() => setOpen(false)}
-                        className="flex items-start gap-3 rounded-xl px-3 py-2.5 text-start transition hover:bg-white/30"
-                      >
-                        <span
-                          className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${
-                            n.kind === "session"
-                              ? "bg-[rgba(214,142,60,0.18)] text-[#8A5A22]"
-                              : "bg-[rgba(217,79,99,0.14)] text-[#B23A4C]"
-                          }`}
-                        >
-                          {n.kind === "session" ? <CalendarClock size={15} /> : <Wallet size={15} />}
-                        </span>
-                        <span className="text-xs font-bold leading-6">{t(n.titleKey, { name: n.name })}</span>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
+      {open && pos && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div
+            className="glass-strong fixed z-50 rounded-2xl p-3 shadow-2xl"
+            style={{ left: pos.left, top: pos.top, bottom: pos.bottom, width: PANEL_W }}
+          >
+            <div className="mb-2 flex items-center justify-between">
+              <p className="text-xs font-extrabold">{t("bell")}</p>
+              {items.length > 0 && (
+                <button
+                  type="button"
+                  onClick={markAll}
+                  className="flex items-center gap-1 rounded-lg bg-white/30 px-2 py-1 text-[10px] font-extrabold transition hover:bg-white/40"
+                >
+                  <CheckCheck size={11} />
+                  ✓
+                </button>
               )}
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+            </div>
+            {items.length === 0 ? (
+              <p className="py-6 text-center text-xs text-[var(--color-ink-soft)]">{t("empty")}</p>
+            ) : (
+              <div className="flex max-h-72 flex-col gap-2 overflow-y-auto">
+                {items.map((n) => {
+                  const isRead = readIds.includes(n.id);
+                  return (
+                    <div key={n.id} className={`rounded-xl p-2.5 ${isRead ? "bg-white/15 opacity-60" : "bg-white/30"}`}>
+                      <p className="text-[11px] font-bold leading-5">{n.message}</p>
+                      <p className="mt-1 text-[9px] text-[var(--color-ink-soft)]">
+                        {new Date(n.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }

@@ -5,10 +5,11 @@ export const SESSION_MAX_AGE = 60 * 60 * 24 * 30; // ۳۰ روز
 
 export type SessionPayload = {
   sub: string;
-  role: "TEACHER" | "STUDENT";
+  role: "ADMIN" | "TEACHER" | "STUDENT";
   name: string | null;
   email: string;
   pending2fa?: boolean;
+  mustChangePassword?: boolean;
 };
 
 function secretKey() {
@@ -23,6 +24,7 @@ export async function createSessionToken(payload: SessionPayload): Promise<strin
     name: payload.name,
     email: payload.email,
     pending2fa: payload.pending2fa ?? false,
+    mustChangePassword: payload.mustChangePassword ?? false,
   })
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(payload.sub)
@@ -37,10 +39,11 @@ export async function verifySessionToken(token: string | undefined): Promise<Ses
     const { payload } = await jwtVerify(token, secretKey());
     return {
       sub: payload.sub as string,
-      role: payload.role as "TEACHER" | "STUDENT",
+      role: payload.role as "ADMIN" | "TEACHER" | "STUDENT",
       name: (payload.name as string | null) ?? null,
       email: payload.email as string,
       pending2fa: (payload.pending2fa as boolean | undefined) ?? false,
+      mustChangePassword: (payload.mustChangePassword as boolean | undefined) ?? false,
     };
   } catch {
     return null;

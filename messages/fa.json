@@ -17,8 +17,8 @@
   "Dashboard": {
     "brand": "دستیار کلاس",
     "tagline": "مدیریت کلاس زبان",
-    "greeting": "سلام، استاد مهرداد 👋",
-    "subtitle": "امروز ۳ جلسه داری؛ اولیش ساعت ۱۷:۰۰",
+    "greeting": "سلام، {name} 👋",
+    "subtitle": "مدیریت کلاس‌هایت در یک نگاه",
     "newSession": "جلسه جدید +",
     "activeStudents": "شاگردان فعال",
     "sessionsThisWeek": "جلسات این هفته",
@@ -113,6 +113,12 @@
     "twoFactorHint": "کد هر ۳۰ ثانیه تغییر می‌کنه",
     "verifyCode": "تأیید و ورود",
     "cancelLogin": "انصراف و خروج",
+    "changePasswordTitle": "تغییر رمز عبور",
+    "changePasswordSubtitle": "برای امنیت بیشتر، لطفاً رمز جدیدی انتخاب کن",
+    "oldPassword": "رمز فعلی",
+    "newPassword": "رمز جدید",
+    "confirmPassword": "تأیید رمز جدید",
+    "changePassword": "تغییر رمز",
     "errors": {
       "invalid": "اطلاعات واردشده معتبر نیست",
       "invalidCredentials": "ایمیل یا رمز عبور اشتباهه",
@@ -121,7 +127,13 @@
       "tooMany": "تلاش‌ها بیش از حد؛ ۱۰ دقیقه صبر کن",
       "invalidCode": "کد ۶ رقمی نامعتبر",
       "notPending": "در انتظار 2FA نیستی",
-      "notEnabled": "2FA فعال نیست"
+      "notEnabled": "2FA فعال نیست",
+      "passwordsDontMatch": "رمزها مطابقت ندارند",
+      "wrongPassword": "رمز فعلی اشتباه است",
+      "passwordTooShort": "رمز باید حداقل ۸ کاراکتر باشد",
+      "notAuthenticated": "وارد نشدی",
+      "userNotFound": "کاربر یافت نشد",
+            "serverError": "خطای سرور؛ چند لحظه دیگر دوباره تلاش کن"
     },
     "studentPortalTitle": "پنل شاگرد",
     "studentPortalBody": "فضای اختصاصی تو؛ جلسه‌ها، پرداخت‌ها و دفترچه‌ی مشقت."
@@ -466,11 +478,48 @@
     "error": "خطا در پردازش",
     "twoFactorEnabled": "احراز هویت دومرحله‌ای فعال شد",
     "twoFactorDisabled": "احراز هویت دومرحله‌ای غیرفعال شد",
+    "backupCodesRemaining": "کدهای بازیابی باقی‌مانده: {{count}}",
+"regenerateBackupCodes": "بازتولید کدها",
+"backupCodesTitle": "کدهای بازیابی",
+"backupCodesHint": "این ۱۰ کد یک‌بار مصرف رو در جای امنی ذخیره کن. اگه گوشی‌ت رو گم کردی، با این کدها می‌تونی وارد بشی.",
+"viewBackupCodes": "مشاهده کدهای بازیابی",
+"copyAllCodes": "کپی همه",
+"copied": "کپی شد!",
+"backupCodesRegenerated": "کدهای بازیابی بازتولید شدند",
+"regenerateTitle": "بازتولید کدهای بازیابی",
+"regenerateHint": "برای تولید ۱۰ کد جدید، رمز اصلی خودت رو وارد کن. کدهای قبلی باطل می‌شن.",
+"confirmRegenerate": "بازتولید",
     "errors": {
       "invalidCode": "کد ۶ رقمی نامعتبر است",
       "notPending": "فرایند راه‌اندازی فعال نیست",
       "notEnabled": "2FA فعال نیست",
       "wrongPassword": "رمز عبور اشتباه است"
+      
     }
+  },
+  "Admin": {
+    "title": "پنل مدیریت",
+    "subtitle": "مدیریت معلم‌های سیستم",
+    "teachers": "معلم‌ها",
+    "createTeacher": "ایجاد معلم جدید",
+    "noTeachers": "هنوز معلمی ثبت نشده",
+    "2faEnabled": "2FA فعال",
+    "resetPassword": "بازنشانی رمز",
+    "confirmDelete": "آیا مطمئنی؟ این عمل قابل بازگشت نیست.",
+    "teacherDeleted": "معلم حذف شد",
+    "teacherCreated": "معلم جدید ساخته شد. رمز عبور موقت:",
+    "generatedPassword": "رمز عبور تولیدشده",
+    "passwordHint": "این رمز رو به معلم بده. او مجبور می‌شه در اولین ورود رمز رو عوض کنه.",
+    "passwordCopied": "رمز در کلیپ‌بورد کپی شد",
+    "passwordReset": "رمز بازنشانی شد",
+    "passwordResetHint": "رمز جدید این معلم:",
+    "email": "ایمیل",
+    "name": "نام",
+    "create": "ایجاد",
+    "cancel": "انصراف",
+    "done": "تمام",
+    "deleteTeacher": "حذف معلم",
+    "copyPassword": "کپی رمز",
+        "loadError": "خطا در دریافت لیست معلم‌ها"
   }
 }

@@ -47,14 +47,22 @@ export default function Landing({
   firstRun,
   content,
 }: {
-  role: "TEACHER" | "STUDENT" | null;
+  role: "ADMIN" | "TEACHER" | "STUDENT" | null;
   firstRun: boolean;
   content: LandingContent;
 }) {
   const t = useTranslations("Landing");
   const [faq, setFaq] = useState<number | null>(0);
 
-  const startHref = role ? (role === "TEACHER" ? "/dashboard" : "/student") : firstRun ? "/setup" : "/login";
+  const startHref = role
+    ? role === "ADMIN"
+      ? "/admin"
+      : role === "TEACHER"
+      ? "/dashboard"
+      : "/student"
+    : firstRun
+    ? "/setup"
+    : "/login";
   const ctaLabel = role ? t("ctaOpen") : t("ctaStart");
 
   return (
@@ -63,7 +71,6 @@ export default function Landing({
         <div className="blob-3" />
       </div>
 
-      {/* ── Navbar ─ */}
       <header className="sticky top-0 z-40 px-4 pt-4">
         <div className="glass-strong mx-auto flex max-w-6xl items-center justify-between rounded-2xl px-4 py-3">
           <div className="flex items-center gap-2">
@@ -91,7 +98,6 @@ export default function Landing({
         </div>
       </header>
 
-      {/* ── Hero ─ */}
       <section className="mx-auto max-w-6xl px-4 pb-24 pt-16 md:pt-24">
         <div className="grid items-center gap-14 lg:grid-cols-2">
           <motion.div {...fade}>
@@ -127,7 +133,6 @@ export default function Landing({
             </div>
           </motion.div>
 
-          {/* موکاپ شیشه‌ای */}
           <motion.div {...fade} className="relative hidden lg:block">
             <div className="glass-strong rounded-[28px] p-6 shadow-[0_50px_100px_-45px_rgba(58,42,46,0.55)]">
               <div className="flex items-center justify-between">
@@ -175,7 +180,6 @@ export default function Landing({
         </div>
       </section>
 
-      {/* ── Stats ── */}
       <section className="mx-auto max-w-6xl px-4">
         <motion.div {...fade} className="glass grid grid-cols-2 gap-6 rounded-[28px] p-8 md:grid-cols-4">
           {[content.stats.teachers, content.stats.sessions, content.stats.notes, content.stats.uptime].map((s) => (
@@ -187,7 +191,6 @@ export default function Landing({
         </motion.div>
       </section>
 
-      {/* ── Features ── */}
       <section id="features" className="mx-auto max-w-6xl px-4 py-24">
         <motion.div {...fade} className="mb-12 text-center">
           <h2 className="text-3xl font-extrabold md:text-4xl">{content.features.title}</h2>
@@ -211,7 +214,6 @@ export default function Landing({
         </div>
       </section>
 
-      {/* ── Showcase ── */}
       <section id="showcase" className="mx-auto max-w-5xl px-4 pb-24">
         <motion.div {...fade} className="mb-10 text-center">
           <h2 className="text-3xl font-extrabold md:text-4xl">{content.showcase.title}</h2>
@@ -222,7 +224,6 @@ export default function Landing({
         </motion.div>
       </section>
 
-      {/* ── Pricing ── */}
       <section id="pricing" className="mx-auto max-w-6xl px-4 pb-24">
         <motion.div {...fade} className="mb-12 text-center">
           <h2 className="text-3xl font-extrabold md:text-4xl">{content.pricing.title}</h2>
@@ -266,7 +267,6 @@ export default function Landing({
         </div>
       </section>
 
-      {/* ── Testimonials ── */}
       <section className="mx-auto max-w-6xl px-4 pb-24">
         <motion.h2 {...fade} className="mb-12 text-center text-3xl font-extrabold md:text-4xl">
           {content.testimonials.title}
@@ -296,7 +296,6 @@ export default function Landing({
         </div>
       </section>
 
-      {/* ── FAQ ─ */}
       <section id="faq" className="mx-auto max-w-3xl px-4 pb-24">
         <motion.h2 {...fade} className="mb-10 text-center text-3xl font-extrabold md:text-4xl">
           {content.faq.title}
@@ -325,7 +324,6 @@ export default function Landing({
         </div>
       </section>
 
-      {/* ── CTA band ── */}
       <section className="mx-auto max-w-6xl px-4 pb-24">
         <motion.div {...fade} className="glass-strong relative overflow-hidden rounded-[32px] p-10 text-center md:p-16">
           <div className="pointer-events-none absolute -top-24 start-1/4 h-64 w-64 rounded-full bg-[#FFCED8] opacity-40 blur-3xl" />
@@ -340,7 +338,6 @@ export default function Landing({
         </motion.div>
       </section>
 
-      {/* ── Footer ── */}
       <footer className="border-t border-white/40 px-4 py-10">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 md:flex-row">
           <div className="flex items-center gap-2">
