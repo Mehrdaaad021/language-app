@@ -68,7 +68,7 @@ export default function DockNav({ onQuickAdd }: { onQuickAdd: () => void }) {
   };
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 flex flex-col items-center pb-4 md:hidden">
+    <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 flex flex-col items-center pb-[max(1rem,env(safe-area-inset-bottom))] md:hidden">
       {/* برچسب گزینه‌ی فعال */}
       <AnimatePresence mode="wait">
         {activeKey && (

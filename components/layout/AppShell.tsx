@@ -13,6 +13,7 @@ import {
   BookOpen,
   Search,
   BarChart3,
+  Palette,
   Settings as SettingsIcon,
 } from "lucide-react";
 import LocaleSwitcher from "@/components/LocaleSwitcher";
@@ -24,7 +25,7 @@ import DockNav from "@/components/layout/DockNav";
 
 const NAV_ALL = [
   { icon: LayoutDashboard, key: "dashboard", href: "/dashboard" },
-  { icon: BarChart3, key: "landing", href: "/dashboard/landing-editor" },
+  { icon: Palette, key: "landing", href: "/dashboard/landing-editor" },
   { icon: GraduationCap, key: "students", href: "/students" },
   { icon: CalendarDays, key: "sessions", href: "/sessions" },
   { icon: Wallet, key: "payments", href: "/payments" },
@@ -87,7 +88,7 @@ export default function AppShell({
               prefetch
               aria-label={tn(item.key)}
               className={`relative flex h-10 w-10 items-center justify-center rounded-xl ${
-                isActive(item.href) ? "text-[#f6eede]" : "text-[var(--color-ink-soft)]"
+                isActive(item.href) ? "text-[#f6eede]" : "text-[var(--c-ink-soft)]"
               }`}
             >
               {isActive(item.href) && (
@@ -113,13 +114,13 @@ export default function AppShell({
               </div>
               <div>
                 <p className="font-extrabold">{t("brand")}</p>
-                <p className="text-xs text-[var(--color-ink-soft)]">{t("tagline")}</p>
+                <p className="text-xs text-[var(--c-ink-soft)]">{t("tagline")}</p>
               </div>
             </div>
 
             <button
               onClick={() => setPaletteOpen(true)}
-              className="glass mb-6 flex w-full items-center justify-between rounded-2xl px-4 py-2.5 text-xs font-bold text-[var(--color-ink-soft)] transition hover:bg-white/40 hover:text-[var(--color-ink)]"
+              className="glass mb-6 flex w-full items-center justify-between rounded-2xl px-4 py-2.5 text-xs font-bold text-[var(--c-ink-soft)] transition hover:bg-white/40 hover:text-[var(--c-ink)]"
             >
               <span className="flex items-center gap-2">
                 <Search size={14} />
@@ -145,7 +146,7 @@ export default function AppShell({
                     className={`relative flex items-center gap-3 rounded-2xl px-4 py-3 transition-colors ${
                       isActive(item.href)
                         ? "text-[#f6eede]"
-                        : "text-[var(--color-ink-soft)] hover:text-[var(--color-ink)]"
+                        : "text-[var(--c-ink-soft)] hover:text-[var(--c-ink)]"
                     }`}
                   >
                     {isActive(item.href) && (
@@ -173,7 +174,7 @@ export default function AppShell({
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-xs font-extrabold">{user.name}</p>
-                    <p className="truncate text-[10px] text-[var(--color-ink-soft)]">{user.email}</p>
+                    <p className="truncate text-[10px] text-[var(--c-ink-soft)]">{user.email}</p>
                   </div>
                   <LogoutButton iconOnly />
                 </div>

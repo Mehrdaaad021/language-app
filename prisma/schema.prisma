@@ -12,13 +12,13 @@ model Workspace {
   id        String    @id @default(cuid())
   name      String
   ownerId   String    @unique
-  owner     User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  students  Student[]
-  sessions  Session[]
-  payments  Payment[]
-  notes     Note[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+  notes     Note[]
+  payments  Payment[]
+  sessions  Session[]
+  students  Student[]
+  owner     User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
 }
 
 model User {
@@ -27,16 +27,16 @@ model User {
   name               String?
   password           String
   role               Role           @default(STUDENT)
-  mustChangePassword Boolean        @default(false)
-  twoFactorSecret    String?
-  twoFactorEnabled   Boolean        @default(false)
-  backupCodes        String?
-  inviteExpiresAt    DateTime?
-  workspace          Workspace?
-  student            Student?
-  notifications      Notification[]
   createdAt          DateTime       @default(now())
   updatedAt          DateTime       @updatedAt
+  twoFactorEnabled   Boolean        @default(false)
+  twoFactorSecret    String?
+  mustChangePassword Boolean        @default(false)
+  backupCodes        String?
+  inviteExpiresAt    DateTime?
+  notifications      Notification[]
+  student            Student?
+  workspace          Workspace?
 }
 
 model LoginAttempt {
@@ -48,37 +48,37 @@ model LoginAttempt {
 }
 
 model Student {
-  id          String      @id @default(cuid())
-  workspaceId String?
-  workspace   Workspace?  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  userId      String?     @unique
-  user        User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
-  name        String
-  phone       String?
-  level       String?
-  term        String?
-  active      Boolean     @default(true)
-  inviteToken String?     @unique
-  invitedAt   DateTime?
+  id              String     @id @default(cuid())
+  userId          String?    @unique
+  name            String
+  phone           String?
+  level           String?
+  term            String?
+  active          Boolean    @default(true)
+  createdAt       DateTime   @default(now())
+  inviteToken     String?    @unique
+  invitedAt       DateTime?
+  workspaceId     String?
   inviteExpiresAt DateTime?
-  sessions    Session[]
-  payments    Payment[]
-  notes       Note[]
-  createdAt   DateTime    @default(now())
+  notes           Note[]
+  payments        Payment[]
+  sessions        Session[]
+  user            User?      @relation(fields: [userId], references: [id])
+  workspace       Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
   @@index([workspaceId, name])
 }
 
 model Session {
   id          String        @id @default(cuid())
-  workspaceId String?
-  workspace   Workspace?    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   studentId   String
-  student     Student       @relation(fields: [studentId], references: [id], onDelete: Cascade)
   date        DateTime
   topic       String?
   status      SessionStatus @default(SCHEDULED)
   createdAt   DateTime      @default(now())
+  workspaceId String?
+  student     Student       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  workspace   Workspace?    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
   @@index([workspaceId, studentId, date])
   @@index([workspaceId, status, date])
@@ -86,14 +86,14 @@ model Session {
 
 model Payment {
   id          String        @id @default(cuid())
-  workspaceId String?
-  workspace   Workspace?    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   studentId   String
-  student     Student       @relation(fields: [studentId], references: [id], onDelete: Cascade)
   amount      Int
   date        DateTime
   status      PaymentStatus @default(PENDING)
   createdAt   DateTime      @default(now())
+  workspaceId String?
+  student     Student       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  workspace   Workspace?    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
   @@index([workspaceId, studentId, date])
   @@index([workspaceId, status, date])
@@ -101,15 +101,15 @@ model Payment {
 
 model Note {
   id          String     @id @default(cuid())
-  workspaceId String?
-  workspace   Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   studentId   String
-  student     Student    @relation(fields: [studentId], references: [id], onDelete: Cascade)
   title       String
   content     String
   date        DateTime
   attachments Json       @default("[]")
   createdAt   DateTime   @default(now())
+  workspaceId String?
+  student     Student    @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  workspace   Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
   @@index([workspaceId, studentId, date])
 }
@@ -117,11 +117,11 @@ model Note {
 model Notification {
   id        String   @id @default(cuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   title     String
   message   String
   read      Boolean  @default(false)
   createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model SiteConfig {
@@ -131,9 +131,9 @@ model SiteConfig {
 }
 
 enum Role {
-  ADMIN
   TEACHER
   STUDENT
+  ADMIN
 }
 
 enum SessionStatus {

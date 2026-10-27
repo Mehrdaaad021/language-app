@@ -1,5 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
+import { Check } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -32,13 +33,14 @@ export default async function DashboardPage({
   const t = await getTranslations({ locale, namespace: "Dashboard" });
   const tp = await getTranslations({ locale, namespace: "Pages" });
   const fmt = (n: number) => fmtNum(n, locale);
+  const fa = locale === "fa";
 
-  /* ساعت: دقیقاً همون ساعتی که معلم ثبت کرده + اعداد یکدست فارسی/انگلیسی */
+  /* ساعت: دقیقاً همون ساعتی که معلم ثبت کرده + اعداد یکدست */
   const timeLabel = (d: Date) => {
     const hh = String(d.getUTCHours()).padStart(2, "0");
     const mm = String(d.getUTCMinutes()).padStart(2, "0");
     const raw = `${hh}:${mm}`;
-    return locale === "fa" ? toFa(raw) : raw;
+    return fa ? toFa(raw) : raw;
   };
 
   const workspace = await prisma.workspace.findFirst({
@@ -78,6 +80,43 @@ export default async function DashboardPage({
     { label: t("overduePayments"), value: fmt(overdue), bg: WHITE },
   ];
 
+  /* ── آن‌بردینگ: چک‌لیست ۳ قدمی ── */
+  const ob = fa
+    ? {
+        title: "راه‌اندازی کلاس",
+        subtitle: "سه قدم تا کامل‌شدن پرونده‌ی کلاس‌ت:",
+        cta: "انجام بده",
+        progress: (n: number) => `${toFa(String(n))} از ${toFa("3")} انجام شد`,
+      }
+    : {
+        title: "Set up your class",
+        subtitle: "Three steps to complete your class profile:",
+        cta: "Do it",
+        progress: (n: number) => `${n} of 3 done`,
+      };
+
+  const steps = [
+    {
+      done: students.length > 0,
+      href: "/students",
+      title: fa ? "اولین شاگرد رو اضافه کن" : "Add your first student",
+      hint: fa ? "پروفایل، سطح و ترم شاگرد رو ثبت کن." : "Record their profile, level and term.",
+    },
+    {
+      done: sessions.length > 0,
+      href: "/sessions",
+      title: fa ? "اولین جلسه رو ثبت کن" : "Schedule your first session",
+      hint: fa ? "تاریخ، ساعت و موضوع جلسه رو مشخص کن." : "Set the date, time and topic.",
+    },
+    {
+      done: payments.length > 0,
+      href: "/payments",
+      title: fa ? "اولین پرداخت رو ثبت کن" : "Record your first payment",
+      hint: fa ? "مبلغ و وضعیت پرداخت رو روشن کن." : "Clarify the amount and status.",
+    },
+  ];
+  const doneCount = steps.filter((s) => s.done).length;
+
   return (
     <div className="space-y-6">
       {/* هدر + دکمه‌های سریع */}
@@ -86,23 +125,77 @@ export default async function DashboardPage({
           <h1 className="text-2xl font-extrabold md:text-3xl">
             {t("greeting", { name: session.name ?? t("brand") })}
           </h1>
-          <p className="mt-1 text-sm text-[var(--color-ink-soft)]">{t("subtitle")}</p>
+          <p className="mt-1 text-sm text-[var(--c-ink-soft)]">{t("subtitle")}</p>
         </div>
         <div className="flex gap-2">
           <Link
             href="/payments"
-            className="rounded-xl bg-[#f6c9d4] px-4 py-2.5 text-xs font-extrabold text-[#4a2430] shadow-sm transition hover:brightness-95"
+            className="rounded-xl bg-[var(--c-pink-strong)] px-4 py-2.5 text-xs font-extrabold text-[var(--c-primary)] shadow-sm transition hover:brightness-95"
           >
             {tp("addPayment")}
           </Link>
           <Link
             href="/sessions"
-            className="rounded-xl bg-[#4a2430] px-4 py-2.5 text-xs font-extrabold text-[#f6eede] shadow-md transition hover:brightness-110"
+            className="btn-primary rounded-xl px-4 py-2.5 text-xs font-extrabold shadow-md transition"
           >
             + {tp("addSession")}
           </Link>
         </div>
       </div>
+
+      {/* آن‌بردینگ — فقط تا وقتی هر ۳ قدم کامل نشده */}
+      {doneCount < 3 && (
+        <div className="rounded-2xl bg-[var(--c-surface)] p-5 shadow-[0_10px_30px_-18px_rgba(74,36,48,0.35)]">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h2 className="text-base font-extrabold">{ob.title}</h2>
+              <p className="mt-0.5 text-xs text-[var(--c-ink-soft)]">{ob.subtitle}</p>
+            </div>
+            <span className="rounded-full bg-[var(--c-pink)] px-3 py-1 text-[10px] font-extrabold text-[var(--c-primary)]">
+              {ob.progress(doneCount)}
+            </span>
+          </div>
+
+          <div className="mt-3 h-2 overflow-hidden rounded-full bg-[var(--c-surface-2)]">
+            <div
+              className="h-full rounded-full bg-[var(--c-primary)] transition-all duration-500"
+              style={{ width: `${(doneCount / 3) * 100}%` }}
+            />
+          </div>
+
+          <div className="mt-4 space-y-2">
+            {steps.map((s, i) => (
+              <div
+                key={s.href}
+                className={`flex items-center justify-between rounded-xl p-3 ${
+                  s.done ? "bg-[var(--c-success-bg)]" : "bg-[var(--c-surface-2)]"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <span
+                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-extrabold ${
+                      s.done ? "bg-[var(--c-success)] text-white" : "bg-white/60 text-[var(--c-ink-soft)]"
+                    }`}
+                  >
+                    {s.done ? <Check size={14} /> : fa ? toFa(String(i + 1)) : i + 1}
+                  </span>
+                  <div>
+                    <p className={`text-sm font-extrabold ${s.done ? "line-through opacity-60" : ""}`}>
+                      {s.title}
+                    </p>
+                    <p className="text-[11px] text-[var(--c-ink-soft)]">{s.hint}</p>
+                  </div>
+                </div>
+                {!s.done && (
+                  <Link href={s.href} className="btn-primary rounded-lg px-3 py-1.5 text-[10px] font-extrabold">
+                    {ob.cta}
+                  </Link>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* کارت‌های آمار پاستلی */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -127,7 +220,7 @@ export default async function DashboardPage({
             </Link>
           </div>
           {upcoming.length === 0 ? (
-            <p className="py-8 text-center text-sm text-[var(--color-ink-soft)]">—</p>
+            <p className="py-8 text-center text-sm text-[var(--c-ink-soft)]">—</p>
           ) : (
             <div className="space-y-2">
               {upcoming.slice(0, 5).map((s) => (
@@ -138,7 +231,7 @@ export default async function DashboardPage({
                     </span>
                     <div>
                       <p className="text-sm font-extrabold">{s.student.name}</p>
-                      <p className="text-[11px] text-[var(--color-ink-soft)]">{s.topic ?? "—"}</p>
+                      <p className="text-[11px] text-[var(--c-ink-soft)]">{s.topic ?? "—"}</p>
                     </div>
                   </div>
                   <span className="rounded-lg bg-[#f6e7c6] px-2 py-1 text-[10px] font-extrabold text-[#4a2430]">
@@ -158,7 +251,7 @@ export default async function DashboardPage({
             </Link>
           </div>
           {payments.length === 0 ? (
-            <p className="py-8 text-center text-sm text-[var(--color-ink-soft)]">—</p>
+            <p className="py-8 text-center text-sm text-[var(--c-ink-soft)]">—</p>
           ) : (
             <div className="space-y-2">
               {payments.slice(0, 5).map((p) => (
@@ -170,7 +263,7 @@ export default async function DashboardPage({
                 >
                   <div>
                     <p className="text-sm font-extrabold">{p.student.name}</p>
-                    <p className="text-[11px] text-[var(--color-ink-soft)]">
+                    <p className="text-[11px] text-[var(--c-ink-soft)]">
                       {fmt(p.amount)} {t("toman")}
                     </p>
                   </div>

@@ -2,12 +2,13 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { CalendarPlus } from "lucide-react";
+import { CalendarPlus, CalendarDays } from "lucide-react";
 import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
 import { TextField } from "@/components/ui/Field";
+import EmptyState from "@/components/ui/EmptyState";
 import { useToast } from "@/components/ui/Toast";
 import { useAppData } from "@/lib/store";
 import { createSession } from "@/lib/server/actions";
@@ -47,7 +48,6 @@ export default function SessionsClient({ title, subtitle }: { title: string; sub
       await refresh();
     } catch {
       toast(tf("saveError"));
-    } finally {
       setSaving(false);
     }
   };
@@ -57,7 +57,7 @@ export default function SessionsClient({ title, subtitle }: { title: string; sub
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-extrabold md:text-3xl">{title}</h1>
-          <p className="mt-1 text-sm text-[var(--color-ink-soft)]">{subtitle}</p>
+          <p className="mt-1 text-sm text-[var(--c-ink-soft)]">{subtitle}</p>
         </div>
         <Button icon={<CalendarPlus size={16} />} onClick={() => setOpen(true)}>
           {t("addSession")}
@@ -67,21 +67,31 @@ export default function SessionsClient({ title, subtitle }: { title: string; sub
       {loading ? (
         <div className="space-y-3">
           {[0, 1, 2].map((i) => (
-            <div key={i} className="h-20 animate-pulse rounded-2xl bg-white/25" />
+            <div key={i} className="h-20 animate-pulse rounded-2xl bg-[var(--c-surface-2)]" />
           ))}
         </div>
       ) : sessions.length === 0 ? (
-        <div className="rounded-2xl bg-white/25 p-12 text-center">
-          <p className="text-sm text-[var(--color-ink-soft)]">هنوز جلسه‌ای ثبت نشده</p>
-        </div>
+        <EmptyState
+          icon={CalendarDays}
+          fa={{
+            title: "هنوز جلسه‌ای ثبت نشده",
+            hint: "اولین جلسه رو ثبت کن تا برنامه‌ی هفته‌ات این‌جا دیده بشه.",
+          }}
+          en={{
+            title: "No sessions yet",
+            hint: "Schedule your first session to see your week planned out here.",
+          }}
+          actionLabel={t("addSession")}
+          onAction={() => setOpen(true)}
+        />
       ) : (
         <div className="space-y-3">
           {sessions.map((s) => (
             <Card key={s.id} className="flex items-center justify-between">
               <div>
                 <p className="font-extrabold">{s.studentName}</p>
-                <p className="mt-1 text-xs text-[var(--color-ink-soft)]">{s.topic}</p>
-                <p className="mt-1 text-xs text-[var(--color-ink-soft)]">
+                <p className="mt-1 text-xs text-[var(--c-ink-soft)]">{s.topic}</p>
+                <p className="mt-1 text-xs text-[var(--c-ink-soft)]">
                   {s.date} — {s.time}
                 </p>
               </div>
@@ -100,7 +110,7 @@ export default function SessionsClient({ title, subtitle }: { title: string; sub
             <select
               value={studentName}
               onChange={(e) => setStudentName(e.target.value)}
-              className="w-full rounded-xl border border-white/40 bg-white/30 px-4 py-2.5 text-sm font-bold outline-none"
+              className="input-field"
             >
               <option value="">{tf("chooseStudent")}</option>
               {students.map((s) => (
@@ -118,7 +128,7 @@ export default function SessionsClient({ title, subtitle }: { title: string; sub
               {tf("cancel")}
             </Button>
             <Button type="submit" className="flex-1">
-              {saving ? "یک لحظه..." : tf("submit")}
+              {saving ? tf("loading") : tf("submit")}
             </Button>
           </div>
         </form>

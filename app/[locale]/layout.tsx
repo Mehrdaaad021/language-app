@@ -48,7 +48,14 @@ export default async function LocaleLayout({
         <link
           rel="stylesheet"
           href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css"
+          
         />
+        <link rel="icon" href="/icons/icon.svg" type="image/svg+xml" />
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="دستیار کلاس" />
       </head>
       <body className="antialiased">
         <ThemeInit />

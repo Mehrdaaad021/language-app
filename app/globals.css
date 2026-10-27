@@ -222,3 +222,17 @@ html body {
     scroll-behavior: auto !important;
   }
 }
+/* ══ alias سازگاری: کلاس‌های قدیمی که از --color-* استفاده می‌کنن ══ */
+:root {
+  --color-bg: var(--c-bg);
+  --color-ink: var(--c-ink);
+  --color-ink-soft: var(--c-ink-soft);
+  --color-primary: var(--c-primary);
+}
+
+.dark {
+  --color-bg: var(--c-bg);
+  --color-ink: var(--c-ink);
+  --color-ink-soft: var(--c-ink-soft);
+  --color-primary: var(--c-primary);
+}

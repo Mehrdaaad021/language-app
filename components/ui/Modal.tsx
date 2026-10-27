@@ -1,8 +1,9 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
+import { useFocusTrap } from "@/lib/useFocusTrap";
 
 export default function Modal({
   open,
@@ -15,6 +16,9 @@ export default function Modal({
   title: string;
   children: ReactNode;
 }) {
+  const panelRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(panelRef, open, onClose);
+
   return (
     <AnimatePresence>
       {open && (
@@ -26,11 +30,16 @@ export default function Modal({
           onMouseDown={onClose}
         >
           <motion.div
+            ref={panelRef}
+            tabIndex={-1}
+            role="dialog"
+            aria-modal="true"
+            aria-label={title}
             initial={{ opacity: 0, y: -16, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -16, scale: 0.97 }}
             transition={{ type: "spring", stiffness: 320, damping: 28 }}
-            className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-[24px] bg-[var(--c-surface)] p-6 shadow-2xl"
+            className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-[24px] bg-[var(--c-surface)] p-6 shadow-2xl outline-none"
             onMouseDown={(e) => e.stopPropagation()}
           >
             <div className="mb-4 flex items-center justify-between">

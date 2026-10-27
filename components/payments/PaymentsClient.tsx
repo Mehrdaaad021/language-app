@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Wallet } from "lucide-react";
 import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
+import EmptyState from "@/components/ui/EmptyState";
 import { useToast } from "@/components/ui/Toast";
 import { useAppData } from "@/lib/store";
 import { createPayment } from "@/lib/server/actions";
@@ -97,7 +98,7 @@ function PaymentForm({
             <button type="button" onClick={onClose} className="flex-1 rounded-full bg-white/30 py-2.5 text-sm font-extrabold transition hover:bg-white/40">
               {tf("cancel")}
             </button>
-            <button type="submit" disabled={saving} className="flex-1 rounded-full bg-gradient-to-b from-[#E8697B] to-[#D94F63] py-2.5 text-sm font-extrabold text-white shadow-lg transition hover:brightness-105 disabled:opacity-60">
+            <button type="submit" disabled={saving} className="btn-primary flex-1 rounded-full py-2.5 text-sm font-extrabold shadow-lg transition disabled:opacity-60">
               {saving ? tf("loading") : tf("submit")}
             </button>
           </div>
@@ -123,12 +124,12 @@ export default function PaymentsClient({ title, subtitle }: { title: string; sub
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-extrabold md:text-3xl">{title}</h1>
-          <p className="mt-1 text-sm text-[var(--color-ink-soft)]">{subtitle}</p>
+          <p className="mt-1 text-sm text-[var(--c-ink-soft)]">{subtitle}</p>
         </div>
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="flex items-center gap-2 rounded-full bg-gradient-to-b from-[#E8697B] to-[#D94F63] px-5 py-2.5 text-sm font-extrabold text-white shadow-lg transition hover:brightness-105"
+          className="btn-primary flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-extrabold shadow-lg transition"
         >
           <Wallet size={16} />
           {t("addPayment")}
@@ -137,36 +138,46 @@ export default function PaymentsClient({ title, subtitle }: { title: string; sub
 
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
-          <p className="text-xs font-bold text-[var(--color-ink-soft)]">{t("totalIncome")}</p>
+          <p className="text-xs font-bold text-[var(--c-ink-soft)]">{t("totalIncome")}</p>
           <p className="mt-2 text-2xl font-extrabold">{fmtNum(paidSum + pendingSum)}</p>
         </Card>
         <Card>
-          <p className="text-xs font-bold text-[var(--color-ink-soft)]">{t("paidSum")}</p>
-          <p className="mt-2 text-2xl font-extrabold text-[#2F6B4F]">{fmtNum(paidSum)}</p>
+          <p className="text-xs font-bold text-[var(--c-ink-soft)]">{t("paidSum")}</p>
+          <p className="mt-2 text-2xl font-extrabold text-[var(--c-success)]">{fmtNum(paidSum)}</p>
         </Card>
         <Card>
-          <p className="text-xs font-bold text-[var(--color-ink-soft)]">{t("pendingSum")}</p>
-          <p className="mt-2 text-2xl font-extrabold text-[#B23A4C]">{fmtNum(pendingSum)}</p>
+          <p className="text-xs font-bold text-[var(--c-ink-soft)]">{t("pendingSum")}</p>
+          <p className="mt-2 text-2xl font-extrabold text-[var(--c-danger)]">{fmtNum(pendingSum)}</p>
         </Card>
       </div>
 
       {loading ? (
         <div className="space-y-3">
           {[0, 1, 2].map((i) => (
-            <div key={i} className="h-20 animate-pulse rounded-2xl bg-white/25" />
+            <div key={i} className="h-20 animate-pulse rounded-2xl bg-[var(--c-surface-2)]" />
           ))}
         </div>
       ) : payments.length === 0 ? (
-        <div className="rounded-2xl bg-white/25 p-12 text-center">
-          <p className="text-sm text-[var(--color-ink-soft)]">هنوز پرداختی ثبت نشده</p>
-        </div>
+        <EmptyState
+          icon={Wallet}
+          fa={{
+            title: "هنوز پرداختی ثبت نشده",
+            hint: "اولین پرداخت رو ثبت کن تا وضعیت مالی کلاس‌ت این‌جا روشن بشه.",
+          }}
+          en={{
+            title: "No payments yet",
+            hint: "Record your first payment to light up your class finances here.",
+          }}
+          actionLabel={t("addPayment")}
+          onAction={() => setOpen(true)}
+        />
       ) : (
         <div className="space-y-3">
           {payments.map((p) => (
             <Card key={p.id} className="flex items-center justify-between">
               <div>
                 <p className="font-extrabold">{p.studentName}</p>
-                <p className="mt-1 text-xs text-[var(--color-ink-soft)]">
+                <p className="mt-1 text-xs text-[var(--c-ink-soft)]">
                   {fmtNum(p.amount)} {t("toman")} — {p.date}
                 </p>
               </div>

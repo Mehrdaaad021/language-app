@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { NotebookPen, Paperclip, X, FileText } from "lucide-react";
 import Card from "@/components/ui/Card";
+import EmptyState from "@/components/ui/EmptyState";
 import { useToast } from "@/components/ui/Toast";
 import { useAppData } from "@/lib/store";
 import { createNote } from "@/lib/server/actions";
@@ -12,7 +13,6 @@ import { uploadAttachment, type Attachment } from "@/lib/server/upload-actions";
 const inputCls =
   "w-full rounded-xl border border-white/40 bg-white/40 px-4 py-2.5 text-sm font-bold outline-none transition focus:border-[#D94F63]";
 
-/* ── نمایش پیوست‌ها: اول URL امضاشده‌ی موقت (preview)، در غیر این صورت url سرور ── */
 function AttachmentChips({ items }: { items: Attachment[] }) {
   if (items.length === 0) return null;
   return (
@@ -98,7 +98,6 @@ function NoteForm({
 
     setSaving(true);
     try {
-      // فقط مسیر فایل در دیتابیس ذخیره می‌شه (نه URL امضاشده‌ی موقت)
       const clean = attachments.map(({ preview, ...rest }) => rest);
       await createNote({ studentId, title: title.trim(), content: content.trim(), date, attachments: clean });
       toast(tp("noteAdded"));
@@ -138,12 +137,7 @@ function NoteForm({
           </div>
           <div>
             <label className="mb-1 block text-xs font-extrabold">{tp("noteContent")}</label>
-            <textarea
-              className={`${inputCls} min-h-32`}
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder={tp("noteContentPh")}
-            />
+            <textarea className={`${inputCls} min-h-32`} value={content} onChange={(e) => setContent(e.target.value)} placeholder={tp("noteContentPh")} />
           </div>
           <div>
             <label className="mb-1 block text-xs font-extrabold">{tf("date")}</label>
@@ -161,24 +155,13 @@ function NoteForm({
               <Paperclip size={14} />
               {uploading ? "…" : tp("uploadHint")}
             </button>
-            <input
-              ref={fileRef}
-              type="file"
-              accept="image/png,image/jpeg,application/pdf"
-              multiple
-              hidden
-              onChange={(e) => onFiles(e.target.files)}
-            />
+            <input ref={fileRef} type="file" accept="image/png,image/jpeg,application/pdf" multiple hidden onChange={(e) => onFiles(e.target.files)} />
             {attachments.length > 0 && (
               <div className="mt-2 flex flex-wrap gap-2">
                 {attachments.map((a) => (
                   <span key={a.id} className="flex items-center gap-1.5 rounded-lg bg-white/30 px-2.5 py-1.5 text-[10px] font-extrabold">
                     {a.kind === "image" ? "🖼" : "📄"} {a.name}
-                    <button
-                      type="button"
-                      onClick={() => setAttachments((prev) => prev.filter((x) => x.id !== a.id))}
-                      className="transition hover:text-[#B23A4C]"
-                    >
+                    <button type="button" onClick={() => setAttachments((prev) => prev.filter((x) => x.id !== a.id))} className="transition hover:text-[#B23A4C]">
                       <X size={12} />
                     </button>
                   </span>
@@ -188,18 +171,10 @@ function NoteForm({
           </div>
 
           <div className="mt-1 flex gap-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 rounded-full bg-white/30 py-2.5 text-sm font-extrabold transition hover:bg-white/40"
-            >
+            <button type="button" onClick={onClose} className="flex-1 rounded-full bg-white/30 py-2.5 text-sm font-extrabold transition hover:bg-white/40">
               {tf("cancel")}
             </button>
-            <button
-              type="submit"
-              disabled={saving || uploading}
-              className="flex-1 rounded-full bg-gradient-to-b from-[#E8697B] to-[#D94F63] py-2.5 text-sm font-extrabold text-white shadow-lg transition hover:brightness-105 disabled:opacity-60"
-            >
+            <button type="submit" disabled={saving || uploading} className="btn-primary flex-1 rounded-full py-2.5 text-sm font-extrabold shadow-lg transition disabled:opacity-60">
               {saving ? tf("loading") : tf("submit")}
             </button>
           </div>
@@ -222,12 +197,12 @@ export default function NotesClient({ title, subtitle }: { title: string; subtit
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-extrabold md:text-3xl">{title}</h1>
-          <p className="mt-1 text-sm text-[var(--color-ink-soft)]">{subtitle}</p>
+          <p className="mt-1 text-sm text-[var(--c-ink-soft)]">{subtitle}</p>
         </div>
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="flex items-center gap-2 rounded-full bg-gradient-to-b from-[#E8697B] to-[#D94F63] px-5 py-2.5 text-sm font-extrabold text-white shadow-lg transition hover:brightness-105"
+          className="btn-primary flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-extrabold shadow-lg transition"
         >
           <NotebookPen size={16} />
           {t("addNote")}
@@ -237,13 +212,23 @@ export default function NotesClient({ title, subtitle }: { title: string; subtit
       {loading ? (
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {[0, 1, 2].map((i) => (
-            <div key={i} className="h-40 animate-pulse rounded-2xl bg-white/25" />
+            <div key={i} className="h-40 animate-pulse rounded-2xl bg-[var(--c-surface-2)]" />
           ))}
         </div>
       ) : notes.length === 0 ? (
-        <div className="rounded-2xl bg-white/25 p-12 text-center">
-          <p className="text-sm text-[var(--color-ink-soft)]">هنوز یادداشتی ثبت نشده</p>
-        </div>
+        <EmptyState
+          icon={NotebookPen}
+          fa={{
+            title: "هنوز یادداشتی ثبت نشده",
+            hint: "اولین یادداشت آموزشی رو بنویس تا دفترچه‌ی شاگردها پر بشه.",
+          }}
+          en={{
+            title: "No notes yet",
+            hint: "Write your first teaching note to fill your students' notebooks.",
+          }}
+          actionLabel={t("addNote")}
+          onAction={() => setOpen(true)}
+        />
       ) : (
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {notes.map((n) => {
@@ -251,10 +236,10 @@ export default function NotesClient({ title, subtitle }: { title: string; subtit
             return (
               <Card key={n.id} className="flex h-full flex-col">
                 <p className="font-extrabold">{n.title}</p>
-                <p className="mt-1 text-xs text-[var(--color-ink-soft)]">
+                <p className="mt-1 text-xs text-[var(--c-ink-soft)]">
                   {student?.name ?? "—"} — {n.date}
                 </p>
-                <p className="mt-3 flex-1 whitespace-pre-wrap text-xs leading-6 text-[var(--color-ink-soft)]">
+                <p className="mt-3 flex-1 whitespace-pre-wrap text-xs leading-6 text-[var(--c-ink-soft)]">
                   {n.content.slice(0, 200)}
                   {n.content.length > 200 && "…"}
                 </p>

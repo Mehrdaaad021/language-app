@@ -1,7 +1,13 @@
 {
   "Meta": {
     "title": "Language Class Assistant",
-    "description": "Digital management for private language classes"
+    "description": "Digital management for private language classes",
+    "errorTitle": "Something went wrong",
+"errorHint": "An unexpected error occurred. Please try again.",
+"tryAgain": "Try again",
+"notFoundTitle": "Page not found",
+"notFoundHint": "This page doesn't exist or has been removed.",
+"backToDashboard": "Back to dashboard"
   },
   "Nav": {
     "dashboard": "Dashboard",

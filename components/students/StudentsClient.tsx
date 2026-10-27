@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { UserPlus, X } from "lucide-react";
+import { UserPlus, Users, X } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
+import EmptyState from "@/components/ui/EmptyState";
 import { useToast } from "@/components/ui/Toast";
 import { useAppData } from "@/lib/store";
 import { createStudent } from "@/lib/server/actions";
@@ -15,7 +16,7 @@ const LEVELS = ["A1", "A2", "B1", "B2", "C1", "C2"];
 const inputCls =
   "w-full rounded-xl border border-white/40 bg-white/40 px-4 py-2.5 text-sm font-bold outline-none transition focus:border-[#D94F63]";
 
-/* ── فرم در کامپوننت جدا: هویت پایدار + state محلی = بدون remount = بدون پرش فوکوس ── */
+/* ── فرم در کامپوننت جدا: هویت پایدار + state محلی = بدون پرش فوکوس ── */
 function StudentForm({ onClose, onDone }: { onClose: () => void; onDone: () => Promise<void> }) {
   const tf = useTranslations("Forms");
   const toast = useToast();
@@ -97,7 +98,7 @@ function StudentForm({ onClose, onDone }: { onClose: () => void; onDone: () => P
             <button
               type="submit"
               disabled={saving}
-              className="flex-1 rounded-full bg-gradient-to-b from-[#E8697B] to-[#D94F63] py-2.5 text-sm font-extrabold text-white shadow-lg transition hover:brightness-105 disabled:opacity-60"
+              className="btn-primary flex-1 rounded-full py-2.5 text-sm font-extrabold shadow-lg transition disabled:opacity-60"
             >
               {saving ? tf("loading") : tf("submit")}
             </button>
@@ -108,7 +109,6 @@ function StudentForm({ onClose, onDone }: { onClose: () => void; onDone: () => P
   );
 }
 
-/* ── صفحه‌ی لیست: فقط لیست + دکمه؛ state فرم اینجا نیست ── */
 export default function StudentsClient({ title, subtitle }: { title: string; subtitle: string }) {
   const t = useTranslations("Pages");
   const { data, loading, refresh } = useAppData();
@@ -121,12 +121,12 @@ export default function StudentsClient({ title, subtitle }: { title: string; sub
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-extrabold md:text-3xl">{title}</h1>
-          <p className="mt-1 text-sm text-[var(--color-ink-soft)]">{subtitle}</p>
+          <p className="mt-1 text-sm text-[var(--c-ink-soft)]">{subtitle}</p>
         </div>
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="flex items-center gap-2 rounded-full bg-gradient-to-b from-[#E8697B] to-[#D94F63] px-5 py-2.5 text-sm font-extrabold text-white shadow-lg transition hover:brightness-105"
+          className="btn-primary flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-extrabold shadow-lg transition"
         >
           <UserPlus size={16} />
           {t("addStudent")}
@@ -136,13 +136,23 @@ export default function StudentsClient({ title, subtitle }: { title: string; sub
       {loading ? (
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {[0, 1, 2].map((i) => (
-            <div key={i} className="h-32 animate-pulse rounded-2xl bg-white/25" />
+            <div key={i} className="h-32 animate-pulse rounded-2xl bg-[var(--c-surface-2)]" />
           ))}
         </div>
       ) : students.length === 0 ? (
-        <div className="rounded-2xl bg-white/25 p-12 text-center">
-          <p className="text-sm text-[var(--color-ink-soft)]">{subtitle}</p>
-        </div>
+        <EmptyState
+          icon={Users}
+          fa={{
+            title: "هنوز شاگردی نداری",
+            hint: "اولین شاگردت رو اضافه کن تا پروفایل، جلسات و پرداخت‌هاش این‌جا چیده بشه.",
+          }}
+          en={{
+            title: "No students yet",
+            hint: "Add your first student to see their profile, sessions and payments here.",
+          }}
+          actionLabel={t("addStudent")}
+          onAction={() => setOpen(true)}
+        />
       ) : (
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {students.map((s) => (
@@ -151,7 +161,7 @@ export default function StudentsClient({ title, subtitle }: { title: string; sub
                 <div className="flex items-start justify-between">
                   <div>
                     <p className="font-extrabold">{s.name}</p>
-                    <p className="mt-1 text-xs text-[var(--color-ink-soft)]">
+                    <p className="mt-1 text-xs text-[var(--c-ink-soft)]">
                       {s.level} — {t("term")}: {s.term}
                     </p>
                   </div>
@@ -159,7 +169,7 @@ export default function StudentsClient({ title, subtitle }: { title: string; sub
                     {s.active ? t("active") : t("inactive")}
                   </Badge>
                 </div>
-                {s.phone && <p className="mt-3 text-xs text-[var(--color-ink-soft)]">{s.phone}</p>}
+                {s.phone && <p className="mt-3 text-xs text-[var(--c-ink-soft)]">{s.phone}</p>}
               </Card>
             </Link>
           ))}

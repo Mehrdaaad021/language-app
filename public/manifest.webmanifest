@@ -1,0 +1,22 @@
+{
+  "name": "دستیار کلاس زبان",
+  "short_name": "دستیار کلاس",
+  "description": "مدیریت کلاس‌های خصوصی زبان: شاگردها، جلسات، پرداخت‌ها و دفترچه‌ی مشق دیجیتال.",
+  "id": "/",
+  "start_url": "/fa/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f6eede",
+  "theme_color": "#4a2430",
+  "lang": "fa",
+  "dir": "rtl",
+  "icons": [
+    { "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/icons/maskable.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" },
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icons/apple-touch-icon.png", "sizes": "180x180", "type": "image/png", "purpose": "any" }
+  ]
+}
