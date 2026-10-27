@@ -1,5 +1,5 @@
 "use client";
-
+import AttachmentImage from "@/components/ui/AttachmentImage";
 import { useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { NotebookPen, Paperclip, X, FileText } from "lucide-react";
@@ -24,10 +24,9 @@ function AttachmentChips({ items }: { items: Attachment[] }) {
             href={a.preview ?? a.url}
             target="_blank"
             rel="noreferrer"
-            className="block overflow-hidden rounded-lg ring-1 ring-white/30"
+            className="block overflow-hidden"
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={a.preview ?? a.url} alt={a.name} className="h-16 w-16 object-cover" />
+            <AttachmentImage src={a.preview ?? a.url} alt={a.name} />
           </a>
         ) : (
           <a
