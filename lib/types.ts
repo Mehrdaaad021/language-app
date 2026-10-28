@@ -5,7 +5,7 @@ export type Student = {
   term: string;
   active: boolean;
   phone: string;
-  hasAccount?: boolean;
+  email: string;
 };
 
 export type Session = {

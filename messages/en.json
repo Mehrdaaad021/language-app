@@ -3,11 +3,11 @@
     "title": "Language Class Assistant",
     "description": "Digital management for private language classes",
     "errorTitle": "Something went wrong",
-"errorHint": "An unexpected error occurred. Please try again.",
-"tryAgain": "Try again",
-"notFoundTitle": "Page not found",
-"notFoundHint": "This page doesn't exist or has been removed.",
-"backToDashboard": "Back to dashboard"
+    "errorHint": "An unexpected error occurred. Please try again.",
+    "tryAgain": "Try again",
+    "notFoundTitle": "Page not found",
+    "notFoundHint": "This page doesn't exist or has been removed.",
+    "backToDashboard": "Back to dashboard"
   },
   "Nav": {
     "dashboard": "Dashboard",
@@ -16,6 +16,7 @@
     "payments": "Payments",
     "notes": "Notes",
     "analytics": "Analytics",
+    "calendar": "Calendar",
     "landing": "Landing Editor",
     "settings": "Settings",
     "switchLocale": "فارسی"
@@ -63,18 +64,24 @@
     "paid": "Paid",
     "pending": "Pending",
     "toman": "Toman",
-    "viewNote": "Read note"
+    "viewNote": "Read note",
+    "calendarTitle": "Session calendar",
+    "calendarSubtitle": "Monthly view of your class schedule",
+    "noUpcoming": "No upcoming sessions"
   },
   "Forms": {
     "cancel": "Cancel",
     "submit": "Save",
     "newStudent": "New student",
+    "loading": "Saving…",
     "newSession": "New session",
     "newPayment": "Record payment",
     "name": "Full name",
     "namePh": "e.g. Sara Mohammadi",
     "phone": "Mobile number",
     "phonePh": "09123456789",
+    "email": "Email (optional)",
+    "emailPh": "student@example.com",
     "level": "Level",
     "term": "Term",
     "termPh": "Term 1",
@@ -92,6 +99,7 @@
     "errors": {
       "required": "This field is required",
       "invalidPhone": "Invalid mobile number (09xxxxxxxxx)",
+      "invalidEmail": "Invalid email address",
       "amountTooSmall": "Amount must be at least 10,000 Toman"
     },
     "studentAdded": "New student added",
@@ -139,7 +147,7 @@
       "passwordTooShort": "Password must be at least 8 characters",
       "notAuthenticated": "Not signed in",
       "userNotFound": "User not found",
-            "serverError": "Server error; please try again in a moment"
+      "serverError": "Server error; please try again in a moment"
     },
     "studentPortalTitle": "Student Portal",
     "studentPortalBody": "Your personal space — sessions, payments and your notebook."
@@ -484,22 +492,22 @@
     "error": "Processing error",
     "twoFactorEnabled": "Two-factor authentication enabled",
     "twoFactorDisabled": "Two-factor authentication disabled",
+    "backupCodesRemaining": "{{count}} backup codes remaining",
+    "regenerateBackupCodes": "Regenerate codes",
+    "backupCodesTitle": "Backup codes",
+    "backupCodesHint": "Save these 10 one-time codes in a safe place. If you lose your phone, you can use them to sign in.",
+    "viewBackupCodes": "View backup codes",
+    "copyAllCodes": "Copy all",
+    "copied": "Copied!",
+    "backupCodesRegenerated": "Backup codes regenerated",
+    "regenerateTitle": "Regenerate backup codes",
+    "regenerateHint": "Enter your password to generate 10 new codes. Old codes will be invalidated.",
+    "confirmRegenerate": "Regenerate",
     "errors": {
       "invalidCode": "Invalid 6-digit code",
       "notPending": "Setup process is not active",
       "notEnabled": "2FA is not enabled",
-      "wrongPassword": "Wrong password",
-      "backupCodesRemaining": "{{count}} backup codes remaining",
-"regenerateBackupCodes": "Regenerate codes",
-"backupCodesTitle": "Backup codes",
-"backupCodesHint": "Save these 10 one-time codes in a safe place. If you lose your phone, you can use them to sign in.",
-"viewBackupCodes": "View backup codes",
-"copyAllCodes": "Copy all",
-"copied": "Copied!",
-"backupCodesRegenerated": "Backup codes regenerated",
-"regenerateTitle": "Regenerate backup codes",
-"regenerateHint": "Enter your password to generate 10 new codes. Old codes will be invalidated.",
-"confirmRegenerate": "Regenerate"
+      "wrongPassword": "Wrong password"
     }
   },
   "Admin": {
@@ -525,6 +533,6 @@
     "done": "Done",
     "deleteTeacher": "Delete teacher",
     "copyPassword": "Copy password",
-        "loadError": "Failed to load teachers"
+    "loadError": "Failed to load teachers"
   }
 }

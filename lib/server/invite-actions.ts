@@ -8,6 +8,7 @@ import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { requireTeacherWorkspace } from "./workspace";
 import { createSessionToken, SESSION_COOKIE, SESSION_MAX_AGE } from "@/lib/session";
+import { sendInviteEmail } from "@/lib/email";
 
 /* لینک دعوت: ۷ روز اعتبار */
 const INVITE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
@@ -23,7 +24,7 @@ export type InviteInfo = {
 export async function generateInviteLink(studentId: string): Promise<{ token: string } | { error: string }> {
   const ctx = await requireTeacherWorkspace();
 
-  // فقط شاگردِ همین workspace
+  // فقط شاگردهای همین workspace
   const student = await prisma.student.findFirst({
     where: { id: studentId, workspaceId: ctx.workspaceId },
   });
@@ -39,6 +40,36 @@ export async function generateInviteLink(studentId: string): Promise<{ token: st
       inviteExpiresAt: new Date(Date.now() + INVITE_TTL_MS),
     },
   });
+
+  // ارسال ایمیل دعوت (graceful: اگه ایمیل نبود یا ارسال شکست، فقط token برمی‌گرده)
+  if (student.email) {
+    try {
+      const workspace = await prisma.workspace.findUnique({
+        where: { id: ctx.workspaceId },
+        include: { owner: true },
+      });
+      if (workspace?.owner) {
+        const faName = /[\u0600-\u06FF]/.test(workspace.owner.name ?? "");
+        const baseUrl =
+          process.env.NEXT_PUBLIC_SITE_URL ??
+          (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
+        const locale = faName ? "fa" : "en";
+        const inviteUrl = `${baseUrl}/${locale}/invite/${token}`;
+
+        await sendInviteEmail({
+          to: student.email,
+          studentName: student.name,
+          teacherName: workspace.owner.name ?? (faName ? "معلم شما" : "Your teacher"),
+          inviteUrl,
+          locale,
+        });
+      }
+    } catch (e) {
+      console.error("[invite] email send failed:", e);
+      // خطا رو swallow می‌کنیم — token همچنان معتبره، کاربر می‌تونه URL رو دستی کپی کنه
+    }
+  }
+
   return { token };
 }
 
@@ -83,7 +114,7 @@ export async function getStudentInviteToken(studentId: string): Promise<string |
   });
   if (!student) return null;
 
-  // توکن منقضی‌شده رو برگردون نکن
+  // توکن منقضی‌شده رو برنگردون
   if (student.inviteExpiresAt && student.inviteExpiresAt < new Date()) return null;
 
   return student.inviteToken ?? null;

@@ -22,6 +22,7 @@ function StudentForm({ onClose, onDone }: { onClose: () => void; onDone: () => P
   const toast = useToast();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [level, setLevel] = useState("A1");
   const [term, setTerm] = useState("");
   const [saving, setSaving] = useState(false);
@@ -30,11 +31,19 @@ function StudentForm({ onClose, onDone }: { onClose: () => void; onDone: () => P
     e.preventDefault();
     if (!name.trim()) return toast(tf("errors.required"));
     if (phone && !/^09\d{9}$/.test(phone)) return toast(tf("errors.invalidPhone"));
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return toast(tf("errors.invalidEmail"));
     if (!term.trim()) return toast(tf("errors.required"));
 
     setSaving(true);
     try {
-      await createStudent({ name: name.trim(), phone, level, term: term.trim(), active: true });
+      await createStudent({
+        name: name.trim(),
+        phone,
+        email: email || null,
+        level,
+        term: term.trim(),
+        active: true,
+      });
       toast(tf("studentAdded"));
       await onDone();
       onClose();
@@ -50,7 +59,7 @@ function StudentForm({ onClose, onDone }: { onClose: () => void; onDone: () => P
       onMouseDown={onClose}
     >
       <div
-        className="glass-strong w-full max-w-md rounded-[24px] p-6 shadow-2xl"
+        className="glass-strong max-h-[90vh] w-full max-w-md overflow-y-auto rounded-[24px] p-6 shadow-2xl"
         onMouseDown={(e) => e.stopPropagation()}
       >
         <div className="mb-5 flex items-center justify-between">
@@ -69,6 +78,11 @@ function StudentForm({ onClose, onDone }: { onClose: () => void; onDone: () => P
           <div>
             <label className="mb-1 block text-xs font-extrabold">{tf("phone")}</label>
             <input className={inputCls} value={phone} onChange={(e) => setPhone(e.target.value)} placeholder={tf("phonePh")} inputMode="numeric" />
+          </div>
+
+          <div>
+            <label className="mb-1 block text-xs font-extrabold">{tf("email")}</label>
+            <input className={inputCls} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={tf("emailPh")} />
           </div>
 
           <div>
@@ -170,6 +184,7 @@ export default function StudentsClient({ title, subtitle }: { title: string; sub
                   </Badge>
                 </div>
                 {s.phone && <p className="mt-3 text-xs text-[var(--c-ink-soft)]">{s.phone}</p>}
+                {s.email && <p className="mt-1 text-xs text-[var(--c-ink-soft)]">{s.email}</p>}
               </Card>
             </Link>
           ))}

@@ -4,11 +4,13 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import type { Note, Payment, Session, Student } from "@/lib/types";
 import { getTeacherWorkspace, requireTeacherWorkspace } from "./workspace";
+import { signAttachments } from "./upload-actions";
 
 /* ── schemas ── */
 const studentSchema = z.object({
   name: z.string().trim().min(1),
-  phone: z.string().regex(/^09\d{9}$/).optional().or(z.literal("")),
+  phone: z.string().regex(/^09\d{9}$/).optional().or(z.literal("")).or(z.null()),
+  email: z.string().email().optional().or(z.literal("")).or(z.null()),
   level: z.string().min(1),
   term: z.string().trim().min(1),
   active: z.boolean(),
@@ -37,7 +39,7 @@ const noteSchema = z.object({
     z.object({ id: z.string(), name: z.string(), kind: z.enum(["image", "file"]), url: z.string() })
   ),
 });
-import { signAttachments } from "./upload-actions";
+
 /* ── fetchAll: برای غیرمعلم‌ها داده‌ی خالی، برای معلم فقط workspace خودش ── */
 export async function fetchAll() {
   const ctx = await getTeacherWorkspace();
@@ -61,6 +63,7 @@ export async function fetchAll() {
       term: s.term ?? "—",
       active: s.active,
       phone: s.phone ?? "",
+      email: s.email ?? "",
     })),
     sessions: sessions.map((s) => ({
       id: s.id,
@@ -102,6 +105,7 @@ export async function createStudent(input: z.input<typeof studentSchema>): Promi
       workspaceId,
       name: d.name,
       phone: d.phone ?? null,
+      email: d.email ?? null,
       level: d.level,
       term: d.term,
       active: d.active,
@@ -114,6 +118,7 @@ export async function createStudent(input: z.input<typeof studentSchema>): Promi
     term: row.term ?? "—",
     active: row.active,
     phone: row.phone ?? "",
+    email: row.email ?? "",
   };
 }
 
@@ -145,7 +150,7 @@ export async function createSession(input: z.input<typeof sessionSchema>): Promi
   };
 }
 
-/* ── ایجاد پرداخت ── */
+/* ── ایجاد پرداخت (با ایمیل رسید) ── */
 export async function createPayment(input: z.input<typeof paymentSchema>): Promise<Payment> {
   const { workspaceId } = await requireTeacherWorkspace();
   const d = paymentSchema.parse(input);
@@ -163,6 +168,32 @@ export async function createPayment(input: z.input<typeof paymentSchema>): Promi
     },
     include: { student: true },
   });
+
+  // ارسال ایمیل رسید پرداخت (graceful: اگه شکست خورد، پرداخت همچنان ثبت می‌مونه)
+  if (student.email) {
+    try {
+      const ws = await prisma.workspace.findUnique({
+        where: { id: workspaceId },
+        include: { owner: true },
+      });
+      if (ws?.owner) {
+        const faName = /[\u0600-\u06FF]/.test(ws.owner.name ?? "");
+        const { sendPaymentReceipt } = await import("@/lib/email");
+        await sendPaymentReceipt({
+          to: student.email,
+          studentName: student.name,
+          amount: d.amount,
+          date: d.date,
+          status: d.status === "paid" ? "PAID" : "PENDING",
+          locale: faName ? "fa" : "en",
+        });
+      }
+    } catch (e) {
+      console.error("[payment] email send failed:", e);
+      // خطا رو swallow می‌کنیم — پرداخت همچنان ثبت شده
+    }
+  }
+
   return {
     id: row.id,
     studentName: row.student.name,

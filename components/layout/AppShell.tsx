@@ -28,6 +28,7 @@ const NAV_ALL = [
   { icon: Palette, key: "landing", href: "/dashboard/landing-editor" },
   { icon: GraduationCap, key: "students", href: "/students" },
   { icon: CalendarDays, key: "sessions", href: "/sessions" },
+  { icon: CalendarDays, key: "calendar", href: "/calendar" },
   { icon: Wallet, key: "payments", href: "/payments" },
   { icon: NotebookPen, key: "notes", href: "/notes" },
   { icon: BarChart3, key: "analytics", href: "/analytics" },

@@ -52,6 +52,7 @@ model Student {
   userId          String?    @unique
   name            String
   phone           String?
+  email           String?
   level           String?
   term            String?
   active          Boolean    @default(true)
