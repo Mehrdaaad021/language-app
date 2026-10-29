@@ -1,3 +1,5 @@
+import OnboardingChecklist from "@/components/onboarding/OnboardingChecklist";
+import DemoDataButton from "@/components/onboarding/DemoDataButton";
 import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 import { Check } from "lucide-react";
@@ -194,6 +196,9 @@ export default async function DashboardPage({
               </div>
             ))}
           </div>
+
+          {/* دکمه‌ی داده‌ی نمونه — فقط وقتی هیچ داده‌ای نیست */}
+          {doneCount === 0 && <DemoDataButton locale={locale} />}
         </div>
       )}
 

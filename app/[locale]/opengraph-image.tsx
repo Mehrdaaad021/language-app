@@ -16,7 +16,6 @@ export default async function Image({
   let fonts: { name: string; data: ArrayBuffer; style: "normal"; weight: 400 }[] = [];
   try {
     const ttf = await fetch(
-      "https://cdn.jsdelivr.net/npm/vazirmatn@33.0.3/fonts/ttf/Vazirmatn-Regular.ttf"
     ).then((r) => r.arrayBuffer());
     fonts = [{ name: "Vazirmatn", data: ttf, style: "normal", weight: 400 }];
   } catch {
