@@ -22,7 +22,15 @@ async function send(to: string, subject: string, html: string): Promise<Result> 
   }
 }
 
-/* ── ۱. ایمیل دعوت شاگرد ── */
+const shell = (fa: boolean, inner: string) => `
+  <div style="font-family: Vazirmatn, Tahoma, sans-serif; direction: ${fa ? "rtl" : "ltr"}; background:#f6eede; padding:24px;">
+    <div style="max-width:480px; margin:0 auto; background:#fff; border-radius:20px; padding:28px;">
+      ${inner}
+    </div>
+  </div>
+`;
+
+/* ── . ایمیل دعوت شاگرد ── */
 export async function sendInviteEmail(params: {
   to: string;
   studentName: string;
@@ -37,34 +45,31 @@ export async function sendInviteEmail(params: {
     ? `${teacherName} شما را به کلاس زبان دعوت کرده`
     : `${teacherName} invited you to a language class`;
 
-  const html = `
-    <div style="font-family: Vazirmatn, Tahoma, sans-serif; direction: ${fa ? "rtl" : "ltr"}; background:#f6eede; padding:24px;">
-      <div style="max-width:480px; margin:0 auto; background:#fff; border-radius:20px; padding:28px;">
-        <h1 style="color:#4a2430; margin:0 0 12px;">
-          ${fa ? "🎓 دعوت به کلاس زبان" : "🎓 Class invitation"}
-        </h1>
-        <p style="color:#40222c; line-height:1.7;">
-          ${fa
-            ? `سلام <b>${studentName}</b> عزیز،<br/>${teacherName} شما را به کلاس خصوصی زبان خود دعوت کرده است.`
-            : `Hi <b>${studentName}</b>,<br/>${teacherName} invited you to their private language class.`}
-        </p>
-        <a href="${inviteUrl}"
-           style="display:inline-block; margin:18px 0; padding:12px 24px; background:#4a2430; color:#f6eede; border-radius:12px; text-decoration:none; font-weight:bold;">
-          ${fa ? "مشاهده کلاس و پذیرش دعوت" : "View class & accept invite"}
-        </a>
-        <p style="color:#96707b; font-size:12px; margin-top:20px;">
-          ${fa
-            ? "این لینک ۷ روز اعتبار دارد. اگر شما نیستید، این ایمیل را نادیده بگیرید."
-            : "This link expires in 7 days. If this wasn't you, ignore this email."}
-        </p>
-      </div>
-    </div>
-  `;
+  const html = shell(
+    fa,
+    `
+    <h1 style="color:#4a2430; margin:0 0 12px;">${fa ? "🎓 دعوت به کلاس زبان" : "🎓 Class invitation"}</h1>
+    <p style="color:#40222c; line-height:1.7;">
+      ${fa
+        ? `سلام <b>${studentName}</b> عزیز،<br/>${teacherName} شما را به کلاس خصوصی زبان خود دعوت کرده است.`
+        : `Hi <b>${studentName}</b>,<br/>${teacherName} invited you to their private language class.`}
+    </p>
+    <a href="${inviteUrl}"
+       style="display:inline-block; margin:18px 0; padding:12px 24px; background:#4a2430; color:#f6eede; border-radius:12px; text-decoration:none; font-weight:bold;">
+      ${fa ? "مشاهده کلاس و پذیرش دعوت" : "View class & accept invite"}
+    </a>
+    <p style="color:#96707b; font-size:12px; margin-top:20px;">
+      ${fa
+        ? "این لینک ۷ روز اعتبار دارد. اگر شما نیستید، این ایمیل را نادیده بگیرید."
+        : "This link expires in 7 days. If this wasn't you, ignore this email."}
+    </p>
+    `
+  );
 
   return send(to, subject, html);
 }
 
-/* ── ۲. ایمیل رسید پرداخت ── */
+/* ── . ایمیل رسید پرداخت ─ */
 export async function sendPaymentReceipt(params: {
   to: string;
   studentName: string;
@@ -75,9 +80,7 @@ export async function sendPaymentReceipt(params: {
 }): Promise<Result> {
   const { to, studentName, amount, date, status, locale } = params;
   const fa = locale === "fa";
-
-  const fmt = (n: number) =>
-    new Intl.NumberFormat(fa ? "fa-IR" : "en-US").format(n);
+  const fmt = (n: number) => new Intl.NumberFormat(fa ? "fa-IR" : "en-US").format(n);
 
   const statusLabel =
     status === "PAID"
@@ -90,30 +93,64 @@ export async function sendPaymentReceipt(params: {
     ? `رسید پرداخت — ${fmt(amount)} تومان`
     : `Payment receipt — ${fmt(amount)}`;
 
-  const html = `
-    <div style="font-family: Vazirmatn, Tahoma, sans-serif; direction: ${fa ? "rtl" : "ltr"}; background:#f6eede; padding:24px;">
-      <div style="max-width:480px; margin:0 auto; background:#fff; border-radius:20px; padding:28px;">
-        <h1 style="color:#4a2430; margin:0 0 12px;">
-          ${fa ? "💳 رسید پرداخت" : "💳 Payment receipt"}
-        </h1>
-        <p style="color:#40222c; line-height:1.7;">
-          ${fa
-            ? `سلام <b>${studentName}</b> عزیز،`
-            : `Hi <b>${studentName}</b>,`}
-        </p>
-        <div style="background:#f7ecd9; border-radius:12px; padding:16px; margin:16px 0;">
-          <div style="color:#96707b; font-size:12px;">${fa ? "مبلغ" : "Amount"}</div>
-          <div style="color:#4a2430; font-size:22px; font-weight:bold;">
-            ${fmt(amount)} ${fa ? "تومان" : ""}
-          </div>
-          <div style="color:#96707b; font-size:12px; margin-top:8px;">${fa ? "تاریخ" : "Date"}</div>
-          <div style="color:#40222c; font-weight:bold;">${date}</div>
-          <div style="color:#96707b; font-size:12px; margin-top:8px;">${fa ? "وضعیت" : "Status"}</div>
-          <div style="color:#40222c; font-weight:bold;">${statusLabel}</div>
-        </div>
-      </div>
+  const html = shell(
+    fa,
+    `
+    <h1 style="color:#4a2430; margin:0 0 12px;">${fa ? "💳 رسید پرداخت" : "💳 Payment receipt"}</h1>
+    <p style="color:#40222c; line-height:1.7;">${fa ? `سلام <b>${studentName}</b> عزیز،` : `Hi <b>${studentName}</b>,`}</p>
+    <div style="background:#f7ecd9; border-radius:12px; padding:16px; margin:16px 0;">
+      <div style="color:#96707b; font-size:12px;">${fa ? "مبلغ" : "Amount"}</div>
+      <div style="color:#4a2430; font-size:22px; font-weight:bold;">${fmt(amount)} ${fa ? "تومان" : ""}</div>
+      <div style="color:#96707b; font-size:12px; margin-top:8px;">${fa ? "تاریخ" : "Date"}</div>
+      <div style="color:#40222c; font-weight:bold;">${date}</div>
+      <div style="color:#96707b; font-size:12px; margin-top:8px;">${fa ? "وضعیت" : "Status"}</div>
+      <div style="color:#40222c; font-weight:bold;">${statusLabel}</div>
     </div>
-  `;
+    `
+  );
+
+  return send(to, subject, html);
+}
+
+/* ── . ایمیل هشدار پرداخت معوق ── */
+export async function sendOverdueEmail(params: {
+  to: string;
+  studentName: string;
+  teacherName: string;
+  amount: number;
+  date: string;
+  locale: "fa" | "en";
+}): Promise<Result> {
+  const { to, studentName, teacherName, amount, date, locale } = params;
+  const fa = locale === "fa";
+  const fmt = (n: number) => new Intl.NumberFormat(fa ? "fa-IR" : "en-US").format(n);
+
+  const subject = fa
+    ? `⚠️ یادآوری پرداخت معوق — ${fmt(amount)} تومان`
+    : `⚠️ Overdue payment reminder — ${fmt(amount)}`;
+
+  const html = shell(
+    fa,
+    `
+    <h1 style="color:#4a2430; margin:0 0 12px;">${fa ? "⚠️ یادآوری پرداخت" : "⚠️ Payment reminder"}</h1>
+    <p style="color:#40222c; line-height:1.7;">
+      ${fa
+        ? `سلام <b>${studentName}</b> عزیز،<br/>طبق ثبت‌های کلاس <b>${teacherName}</b>، پرداخت زیر هنوز انجام نشده است:`
+        : `Hi <b>${studentName}</b>,<br/>According to <b>${teacherName}</b>'s class records, the following payment is still outstanding:`}
+    </p>
+    <div style="background:#fdecea; border-radius:12px; padding:16px; margin:16px 0; border:1px solid #f5c6c0;">
+      <div style="color:#96707b; font-size:12px;">${fa ? "مبلغ" : "Amount"}</div>
+      <div style="color:#b3261e; font-size:22px; font-weight:bold;">${fmt(amount)} ${fa ? "تومان" : ""}</div>
+      <div style="color:#96707b; font-size:12px; margin-top:8px;">${fa ? "سررسید" : "Due date"}</div>
+      <div style="color:#40222c; font-weight:bold;">${date}</div>
+    </div>
+    <p style="color:#96707b; font-size:12px;">
+      ${fa
+        ? "اگه پرداخت انجام شده، این پیام رو نادیده بگیرید. 💛"
+        : "If you've already paid, please ignore this message. 💛"}
+    </p>
+    `
+  );
 
   return send(to, subject, html);
 }

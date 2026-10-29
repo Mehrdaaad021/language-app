@@ -5,6 +5,7 @@ import { useLocale } from "next-intl";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
+import { toJalali, jalaliToGregorian, jalaliMonthDays, toFa } from "@/lib/jalali";
 
 type Session = {
   id: string;
@@ -25,73 +26,6 @@ const MONTHS_EN = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December",
 ];
-
-/* ── تبدیل میلادی → شمسی ── */
-function toJalali(gy: number, gm: number, gd: number): [number, number, number] {
-  const g_d_m = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
-  const gy2 = gm > 2 ? gy + 1 : gy;
-  let days =
-    355666 +
-    365 * gy +
-    Math.floor((gy2 + 3) / 4) -
-    Math.floor((gy2 + 99) / 100) +
-    Math.floor((gy2 + 399) / 400) +
-    gd +
-    g_d_m[gm - 1];
-  let jy = -1595 + 33 * Math.floor(days / 12053);
-  days %= 12053;
-  jy += 4 * Math.floor(days / 1461);
-  days %= 1461;
-  if (days > 365) {
-    jy += Math.floor((days - 1) / 365);
-    days = (days - 1) % 365;
-  }
-  const jm = days < 186 ? 1 + Math.floor(days / 31) : 7 + Math.floor((days - 186) / 30);
-  const jd = 1 + (days < 186 ? days % 31 : (days - 186) % 30);
-  return [jy, jm, jd];
-}
-
-/* ── تبدیل شمسی → میلادی ── */
-function jalaliToGregorian(jy: number, jm: number, jd: number): [number, number, number] {
-  const jy2 = jy - 979;
-  const jm2 = jm - 1;
-  const jd2 = jd - 1;
-  let jdn =
-    365 * jy2 +
-    Math.floor(jy2 / 33) * 8 +
-    Math.floor(((jy2 % 33) + 3) / 4) +
-    30 * jm2 +
-    Math.min(jm2, 6) +
-    jd2;
-  jdn += 2794545;
-  const l = jdn + 68569;
-  const n = Math.floor((4 * l) / 146097);
-  let l2 = l - Math.floor((146097 * n + 3) / 4);
-  const i = Math.floor((4000 * (l2 + 1)) / 1461001);
-  l2 = l2 - Math.floor((1461 * i) / 4) + 31;
-  const j = Math.floor((80 * l2) / 2447);
-  const gd = l2 - Math.floor((2447 * j) / 80);
-  l2 = Math.floor(j / 11);
-  const gm = j + 2 - 12 * l2;
-  const gy = 100 * (n - 49) + i + l2;
-  return [gy, gm, gd];
-}
-
-/* ── تعداد روزهای ماه شمسی (محاسبه‌ی مطمئن از روی تقویم میلادی) ── */
-function jalaliMonthDays(jy: number, jm: number): number {
-  if (jm <= 6) return 31;
-  if (jm <= 11) return 30;
-  const [gy1, gm1, gd1] = jalaliToGregorian(jy, 1, 1);
-  const [gy2, gm2, gd2] = jalaliToGregorian(jy + 1, 1, 1);
-  const yearDays = Math.round(
-    (Date.UTC(gy2, gm2 - 1, gd2) - Date.UTC(gy1, gm1 - 1, gd1)) / 86400000
-  );
-  return yearDays - 336; // ۶×۳۱ + ۵×۳۰ = ۳۳۶
-}
-
-function toFa(n: number | string): string {
-  return String(n).replace(/\d/g, (d) => "۰۱۲۳۴۵۶۷۸۹"[Number(d)]);
-}
 
 export default function MonthlyCalendar({
   sessions,
@@ -134,9 +68,13 @@ export default function MonthlyCalendar({
   }, [sessions]);
 
   const prev = () =>
-    setView((v) => (v.month === 1 ? { year: v.year - 1, month: 12 } : { ...v, month: v.month - 1 }));
+    setView((v) =>
+      v.month === 1 ? { year: v.year - 1, month: 12 } : { ...v, month: v.month - 1 }
+    );
   const next = () =>
-    setView((v) => (v.month === 12 ? { year: v.year + 1, month: 1 } : { ...v, month: v.month + 1 }));
+    setView((v) =>
+      v.month === 12 ? { year: v.year + 1, month: 1 } : { ...v, month: v.month + 1 }
+    );
   const goToday = () => {
     const now = new Date();
     if (fa) {
@@ -178,7 +116,10 @@ export default function MonthlyCalendar({
 
       <div className="grid grid-cols-7 gap-1">
         {(fa ? WEEKDAYS_FA : WEEKDAYS_EN).map((w, i) => (
-          <div key={i} className="py-2 text-center text-[10px] font-extrabold text-[var(--c-ink-soft)]">
+          <div
+            key={i}
+            className="py-2 text-center text-[10px] font-extrabold text-[var(--c-ink-soft)]"
+          >
             {w}
           </div>
         ))}
