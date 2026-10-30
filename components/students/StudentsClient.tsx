@@ -1,5 +1,5 @@
 "use client";
-
+import ExportButtons from "@/components/export/ExportButtons";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { UserPlus, Users, X } from "lucide-react";
@@ -137,14 +137,17 @@ export default function StudentsClient({ title, subtitle }: { title: string; sub
           <h1 className="text-2xl font-extrabold md:text-3xl">{title}</h1>
           <p className="mt-1 text-sm text-[var(--c-ink-soft)]">{subtitle}</p>
         </div>
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          className="btn-primary flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-extrabold shadow-lg transition"
-        >
-          <UserPlus size={16} />
-          {t("addStudent")}
-        </button>
+        <div className="flex gap-2">
+          <ExportButtons type="students" />
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            className="btn-primary flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-extrabold shadow-lg transition"
+          >
+            <UserPlus size={16} />
+            {t("addStudent")}
+          </button>
+        </div>
       </div>
 
       {loading ? (

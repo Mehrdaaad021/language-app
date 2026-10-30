@@ -13,14 +13,23 @@ export default async function Image({
   const { locale } = await params;
   const fa = locale === "fa";
 
+  // تلاش برای بارگذاری فونت وزیرمتن از لوکال (TTF برای OG Image)
   let fonts: { name: string; data: ArrayBuffer; style: "normal"; weight: 400 }[] = [];
   try {
-    const ttf = await fetch(
-    ).then((r) => r.arrayBuffer());
-    fonts = [{ name: "Vazirmatn", data: ttf, style: "normal", weight: 400 }];
+    // در Next 16، باید از globalThis.fetch استفاده کنیم تا TypeScript گیر نده
+    const gFetch = globalThis.fetch;
+    const response = await gFetch(
+      "https://cdn.jsdelivr.net/npm/vazirmatn@33.0.3/fonts/ttf/Vazirmatn-Regular.ttf"
+    );
+    if (response.ok) {
+      const ttf = await response.arrayBuffer();
+      fonts = [{ name: "Vazirmatn", data: ttf, style: "normal", weight: 400 }];
+    }
   } catch {
-    // اگه فونت نرسید، با فونت پیش‌فرض رندر می‌شه
+    // اگه فونت نرسید، با فونت پیش‌فرض satori رندر می‌شه
   }
+
+  const fontFamily = fonts.length > 0 ? "Vazirmatn" : "sans-serif";
 
   return new ImageResponse(
     (
@@ -33,8 +42,8 @@ export default async function Image({
           alignItems: "center",
           justifyContent: "center",
           gap: 32,
-          background: "#f6eede",
-          fontFamily: "Vazirmatn, sans-serif",
+          background: "linear-gradient(135deg, #f6eede 0%, #f8d8e0 100%)",
+          fontFamily,
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 28 }}>
@@ -60,12 +69,7 @@ export default async function Image({
             </span>
           </div>
         </div>
-        <div
-          style={{
-            display: "flex",
-            gap: 16,
-          }}
-        >
+        <div style={{ display: "flex", gap: 16, flexWrap: "wrap", justifyContent: "center" }}>
           {(fa ? ["شاگردها", "جلسات", "پرداخت‌ها", "دفترچه مشق"] : ["Students", "Sessions", "Payments", "Notebook"]).map(
             (chip) => (
               <span
