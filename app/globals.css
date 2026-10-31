@@ -265,3 +265,182 @@ html body {
   --color-ink-soft: var(--c-ink-soft);
   --color-primary: var(--c-primary);
 }
+/* ═══════════════════ MICRO-INTERACTIONS ═══════════════════ */
+@media (prefers-reduced-motion: no-preference) {
+  /* فشار دکمه = حس فیزیکی */
+  .btn-primary:active,
+  button:active {
+    transform: scale(0.97);
+  }
+
+  /* ورود ظریف پنل‌های شیشه‌ای (مودال‌ها) */
+  .glass-strong {
+    animation: rise-in 0.3s cubic-bezier(0.2, 1.1, 0.4, 1);
+  }
+  @keyframes rise-in {
+    from {
+      opacity: 0;
+      transform: translateY(10px) scale(0.98);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  /* هاله‌ی تمرکز روی input ها */
+  input:focus,
+  select:focus,
+  textarea:focus {
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--c-primary) 14%, transparent);
+  }
+
+  /* هاور نرم روی همه‌ی کارت‌ها */
+  .transition-lift {
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+  }
+  .transition-lift:hover {
+    transform: translateY(-3px);
+  }
+}
+
+/* حلقه‌ی فوکوس برای دسترس‌پذیری */
+:focus-visible {
+  outline: 2px solid var(--c-primary);
+  outline-offset: 2px;
+  border-radius: 10px;
+}
+
+/* اسکرول‌بار باریک و هماهنگ با تم */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--c-primary) 35%, transparent) transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--c-primary) 35%, transparent);
+  border-radius: 999px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* رنگ انتخاب متن */
+::selection {
+  background: color-mix(in srgb, var(--c-primary) 30%, transparent);
+}
+
+/* ═══════════════════ SKELETON SHIMMER ═══════════════════ */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--c-surface-2);
+  border-radius: 14px;
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.45),
+    transparent
+  );
+  animation: shimmer 1.4s infinite;
+}
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* ═══════════════════ DARK MODE LUXURY ═══════════════════ */
+html[data-theme="dark"],
+html.dark {
+  --c-bg: #171013;
+  --c-surface: #221619;
+  --c-surface-2: #2c1d21;
+  --c-ink: #f3e8ea;
+  --c-ink-soft: #bfa6ad;
+  --c-primary: #e8899a;
+  --c-on-primary: #2a141a;
+  --c-pink: #3a2129;
+  --c-pink-strong: #4a2731;
+  --c-success: #4ecf9a;
+  --c-success-bg: #1d332a;
+  color-scheme: dark;
+}
+
+html[data-theme="dark"] body,
+html.dark body {
+  background:
+    radial-gradient(1100px 550px at 85% -10%, #2a1a20 0%, transparent 60%),
+    radial-gradient(900px 500px at -10% 110%, #241a1d 0%, transparent 55%),
+    #171013;
+}
+
+/* شیشه‌ی دودی */
+html[data-theme="dark"] .glass-strong,
+html.dark .glass-strong {
+  background: rgba(34, 22, 25, 0.72);
+  border-color: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(18px);
+}
+
+/* نگاشت پاستل‌های سخت‌کدشده به تُن‌های شب */
+html[data-theme="dark"] .bg-\[\#f7ecd9\],
+html[data-theme="dark"] .bg-\[\#fdfbf5\],
+html.dark .bg-\[\#f7ecd9\],
+html.dark .bg-\[\#fdfbf5\] {
+  background-color: #221619 !important;
+}
+html[data-theme="dark"] .bg-\[\#f8d8e0\],
+html.dark .bg-\[\#f8d8e0\] {
+  background-color: #3a2129 !important;
+}
+html[data-theme="dark"] .bg-\[\#f6e7c6\],
+html.dark .bg-\[\#f6e7c6\] {
+  background-color: #33261a !important;
+}
+html[data-theme="dark"] .text-\[\#40222c\],
+html[data-theme="dark"] .text-\[\#4a2430\],
+html.dark .text-\[\#40222c\],
+html.dark .text-\[\#4a2430\] {
+  color: #f3e8ea !important;
+}
+html[data-theme="dark"] .text-\[\#7c5a63\],
+html[data-theme="dark"] .text-\[\#96707b\],
+html.dark .text-\[\#7c5a63\],
+html.dark .text-\[\#96707b\] {
+  color: #bfa6ad !important;
+}
+html[data-theme="dark"] .text-\[\#c2586b\],
+html.dark .text-\[\#c2586b\] {
+  color: #e8899a !important;
+}
+
+/* گرادیان کارت‌های آمار — حالت شب */
+.stat-pink { background: linear-gradient(135deg, #fde7ec, #f8d8e0); }
+.stat-amber { background: linear-gradient(135deg, #fbf0d9, #f6e7c6); }
+.stat-cream { background: linear-gradient(135deg, #fefcf7, #fdfbf5); }
+.stat-rose { background: linear-gradient(135deg, #fbe3e1, #f6d2ce); }
+
+html[data-theme="dark"] .stat-pink,
+html.dark .stat-pink { background: linear-gradient(135deg, #3a2129, #2c1d21); }
+html[data-theme="dark"] .stat-amber,
+html.dark .stat-amber { background: linear-gradient(135deg, #33261a, #2c1d21); }
+html[data-theme="dark"] .stat-cream,
+html.dark .stat-cream { background: linear-gradient(135deg, #241a1d, #221619); }
+html[data-theme="dark"] .stat-rose,
+html.dark .stat-rose { background: linear-gradient(135deg, #3a1d1b, #2c1d21); }
+
+/* shimmer ملایم‌تر در شب */
+html[data-theme="dark"] .skeleton::after,
+html.dark .skeleton::after {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.07), transparent);
+}

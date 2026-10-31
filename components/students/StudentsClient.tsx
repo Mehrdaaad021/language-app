@@ -11,6 +11,7 @@ import { useToast } from "@/components/ui/Toast";
 import { useAppData } from "@/lib/store";
 import { createStudent } from "@/lib/server/actions";
 import StudentCard from "@/components/students/StudentCard";
+import { SkeletonCard } from "@/components/ui/Skeleton";
 const LEVELS = ["A1", "A2", "B1", "B2", "C1", "C2"];
 
 const inputCls =
@@ -149,11 +150,10 @@ export default function StudentsClient({ title, subtitle }: { title: string; sub
           </button>
         </div>
       </div>
-
       {loading ? (
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {[0, 1, 2].map((i) => (
-            <div key={i} className="h-32 animate-pulse rounded-2xl bg-[var(--c-surface-2)]" />
+            <SkeletonCard key={i} />
           ))}
         </div>
       ) : students.length === 0 ? (

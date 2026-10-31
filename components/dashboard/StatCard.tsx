@@ -2,24 +2,25 @@ import type { LucideIcon } from "lucide-react";
 
 type Variant = "pink" | "amber" | "cream" | "rose";
 
+/* ── گرادیان‌ها حالا از کلاس‌های تم‌پذیر stat-* میان (در globals.css تعریف شدن) ── */
 const VARIANTS: Record<Variant, { bg: string; icon: string; glow: string }> = {
   pink: {
-    bg: "from-[#fde7ec] to-[#f8d8e0]",
+    bg: "stat-pink",
     icon: "bg-[#d94f63]/10 text-[#c2586b]",
     glow: "bg-[#d94f63]/25",
   },
   amber: {
-    bg: "from-[#fbf0d9] to-[#f6e7c6]",
+    bg: "stat-amber",
     icon: "bg-[#d98a2b]/10 text-[#b3701f]",
     glow: "bg-[#e9a23b]/25",
   },
   cream: {
-    bg: "from-[#fefcf7] to-[#fdfbf5]",
+    bg: "stat-cream",
     icon: "bg-[#4a2430]/8 text-[#4a2430]",
     glow: "bg-[#96707b]/20",
   },
   rose: {
-    bg: "from-[#fbe3e1] to-[#f6d2ce]",
+    bg: "stat-rose",
     icon: "bg-[#b3261e]/10 text-[#b3261e]",
     glow: "bg-[#b3261e]/20",
   },
@@ -42,7 +43,7 @@ export default function StatCard({
 
   return (
     <div
-      className={`group relative overflow-hidden rounded-3xl bg-gradient-to-br ${v.bg} p-5 shadow-[0_10px_30px_-18px_rgba(74,36,48,0.35)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_22px_45px_-20px_rgba(74,36,48,0.45)]`}
+      className={`group relative overflow-hidden rounded-3xl ${v.bg} p-5 shadow-[0_10px_30px_-18px_rgba(74,36,48,0.35)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_22px_45px_-20px_rgba(74,36,48,0.45)]`}
     >
       {/* هاله‌ی نور تزئینی */}
       <div

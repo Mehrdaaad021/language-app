@@ -11,7 +11,7 @@ import { useAppData } from "@/lib/store";
 import { createPayment } from "@/lib/server/actions";
 import ExportButtons from "@/components/export/ExportButtons";
 import { toJalali, toFa } from "@/lib/jalali";
-
+import { SkeletonCard, SkeletonStat } from "@/components/ui/Skeleton";
 const inputCls =
   "w-full rounded-xl border border-white/40 bg-white/40 px-4 py-2.5 text-sm font-bold outline-none transition focus:border-[#D94F63]";
 
@@ -175,12 +175,19 @@ export default function PaymentsClient({ title, subtitle }: { title: string; sub
         </div>
       </div>
 
-      {loading ? (
-        <div className="grid gap-4 md:grid-cols-2">
-          {[0, 1, 2, 3].map((i) => (
-            <div key={i} className="h-24 animate-pulse rounded-2xl bg-[var(--c-surface-2)]" />
-          ))}
-        </div>
+            {loading ? (
+        <>
+          <div className="grid gap-4 md:grid-cols-3">
+            {[0, 1, 2].map((i) => (
+              <SkeletonStat key={i} />
+            ))}
+          </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            {[0, 1, 2, 3].map((i) => (
+              <SkeletonCard key={i} />
+            ))}
+          </div>
+        </>
       ) : payments.length === 0 ? (
         <EmptyState
           icon={Wallet}
