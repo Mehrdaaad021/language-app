@@ -15,6 +15,7 @@ import {
   BarChart3,
   Palette,
   Settings as SettingsIcon,
+  DatabaseBackup,
 } from "lucide-react";
 import LocaleSwitcher from "@/components/LocaleSwitcher";
 import LogoutButton from "@/components/auth/LogoutButton";
@@ -32,6 +33,7 @@ const NAV_ALL = [
   { icon: Wallet, key: "payments", href: "/payments" },
   { icon: NotebookPen, key: "notes", href: "/notes" },
   { icon: BarChart3, key: "analytics", href: "/analytics" },
+  { icon: DatabaseBackup, key: "backup", href: "/backup" },
   { icon: SettingsIcon, key: "settings", href: "/settings" },
 ];
 

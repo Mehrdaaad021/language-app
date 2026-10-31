@@ -9,7 +9,7 @@ import { CustomThemeProvider } from "@/components/ThemeProvider";
 import PwaRegistrar from "@/components/PwaRegistrar";
 import ThemeInit from "@/components/ThemeInit";
 import "../globals.css";
-
+import PwaManager from "@/components/pwa/PwaManager";
 const META: Record<Locale, Metadata> = {
   fa: { title: "دستیار کلاس زبان", description: "مدیریت دیجیتال کلاس‌های خصوصی زبان" },
   en: { title: "Language Class Assistant", description: "Digital management for private language classes" },
@@ -62,10 +62,13 @@ export default async function LocaleLayout({
           <NextIntlClientProvider messages={messages}>
             <ToastProvider>
               <AppDataProvider>{children}</AppDataProvider>
+              
             </ToastProvider>
           </NextIntlClientProvider>
         </CustomThemeProvider>
+        
       </body>
+      
     </html>
   );
 }

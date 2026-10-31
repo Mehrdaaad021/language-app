@@ -19,7 +19,8 @@
     "calendar": "Calendar",
     "landing": "Landing Editor",
     "settings": "Settings",
-    "switchLocale": "فارسی"
+    "switchLocale": "فارسی",
+    "backup": "Backup"
   },
   "Dashboard": {
     "brand": "Class Assistant",
