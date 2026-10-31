@@ -7,6 +7,8 @@ import { Link } from "@/i18n/navigation";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import Badge from "@/components/ui/Badge";
+import { Users, CalendarDays, Wallet, AlertTriangle } from "lucide-react";
+import StatCard from "@/components/dashboard/StatCard";
 
 const FA_DIGITS = ["۰", "۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹"];
 const toFa = (s: string) => s.replace(/\d/g, (d) => FA_DIGITS[Number(d)]);
@@ -75,11 +77,11 @@ export default async function DashboardPage({
   const monthlyIncome = payments.filter((p) => p.status === "PAID").reduce((a, p) => a + p.amount, 0);
   const overdue = payments.filter((p) => p.status === "PENDING").length;
 
-  const STATS = [
-    { label: t("activeStudents"), value: fmt(activeStudents), bg: PINK },
-    { label: t("sessionsThisWeek"), value: fmt(upcoming.length), bg: PINK },
-    { label: t("monthlyIncome"), value: fmt(monthlyIncome), bg: YELLOW, suffix: t("toman") },
-    { label: t("overduePayments"), value: fmt(overdue), bg: WHITE },
+   const STATS = [
+    { label: t("activeStudents"), value: fmt(activeStudents), icon: Users, variant: "pink" as const },
+    { label: t("sessionsThisWeek"), value: fmt(upcoming.length), icon: CalendarDays, variant: "amber" as const },
+    { label: t("monthlyIncome"), value: fmt(monthlyIncome), suffix: t("toman"), icon: Wallet, variant: "cream" as const },
+    { label: t("overduePayments"), value: fmt(overdue), icon: AlertTriangle, variant: "rose" as const },
   ];
 
   /* ── آن‌بردینگ: چک‌لیست ۳ قدمی ── */
@@ -202,16 +204,17 @@ export default async function DashboardPage({
         </div>
       )}
 
-      {/* کارت‌های آمار پاستلی */}
+            {/* کارت‌های آمار — سبک Linear */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {STATS.map((s) => (
-          <div key={s.label} className={`${s.bg} rounded-2xl p-5 shadow-[0_10px_30px_-18px_rgba(74,36,48,0.35)]`}>
-            <p className="text-[11px] font-extrabold text-[#7c5a63]">{s.label}</p>
-            <p className="mt-2 text-3xl font-extrabold text-[#40222c]">
-              {s.value}
-              {s.suffix && <span className="ms-1 text-xs font-bold text-[#7c5a63]">{s.suffix}</span>}
-            </p>
-          </div>
+          <StatCard
+            key={s.label}
+            label={s.label}
+            value={s.value}
+            suffix={s.suffix}
+            icon={s.icon}
+            variant={s.variant}
+          />
         ))}
       </div>
 

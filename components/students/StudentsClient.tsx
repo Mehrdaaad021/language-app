@@ -10,7 +10,7 @@ import EmptyState from "@/components/ui/EmptyState";
 import { useToast } from "@/components/ui/Toast";
 import { useAppData } from "@/lib/store";
 import { createStudent } from "@/lib/server/actions";
-
+import StudentCard from "@/components/students/StudentCard";
 const LEVELS = ["A1", "A2", "B1", "B2", "C1", "C2"];
 
 const inputCls =
