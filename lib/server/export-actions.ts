@@ -11,14 +11,17 @@ export async function exportStudentsCSV(): Promise<{ csv: string; filename: stri
   });
 
   const header = "Name,Phone,Email,Level,Term,Active\n";
+  // فرمول متنی اکسل: شماره با صفر اول حفظ می‌شه (نه 9.12E+09)
+  const excelText = (v: string) => `"=""${v}"""`;
+
   const rows = students
     .map((s) =>
       [
         `"${s.name}"`,
-        s.phone ?? "",
+        s.phone ? excelText(s.phone) : "",
         s.email ?? "",
         s.level ?? "",
-        s.term ?? "",
+        `"${s.term ?? ""}"`,
         s.active ? "Yes" : "No",
       ].join(",")
     )

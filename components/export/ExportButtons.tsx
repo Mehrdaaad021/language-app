@@ -22,7 +22,10 @@ export default function ExportButtons({ type }: { type: "students" | "payments" 
       else if (type === "payments") result = await exportPaymentsCSV();
       else result = await exportSessionsCSV();
 
-      const blob = new Blob([result.csv], { type: "text/csv;charset=utf-8;" });
+      // ⭐ BOM اضافه می‌شه تا اکسل UTF-8 (فارسی) رو درست بخونه
+      const blob = new Blob(["\uFEFF" + result.csv], {
+        type: "text/csv;charset=utf-8;",
+      });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
