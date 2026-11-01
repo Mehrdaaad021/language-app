@@ -14,6 +14,8 @@ model Workspace {
   ownerId   String    @unique
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+    homeworks Homework[]
+  messages  Message[]
   notes     Note[]
   payments  Payment[]
   sessions  Session[]
@@ -66,7 +68,8 @@ model Student {
   sessions        Session[]
   user            User?      @relation(fields: [userId], references: [id])
   workspace       Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-
+  homeworks Homework[]
+  messages  Message[]
   @@index([workspaceId, name])
 }
 
@@ -80,6 +83,9 @@ model Session {
   workspaceId String?
   student     Student       @relation(fields: [studentId], references: [id], onDelete: Cascade)
   workspace   Workspace?    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+    score            Int?
+  studentConfirmed Boolean   @default(false)
+  confirmedAt      DateTime?
 
   @@index([workspaceId, studentId, date])
   @@index([workspaceId, status, date])
@@ -147,4 +153,40 @@ enum PaymentStatus {
   PENDING
   PAID
   OVERDUE
+}
+model Homework {
+  id             String    @id @default(cuid())
+  workspaceId    String
+  studentId      String
+  title          String
+  description    String    @default("")
+  dueDate        DateTime?
+  status         String    @default("OPEN") // OPEN | SUBMITTED | GRADED
+  submissionText String    @default("")
+  submittedAt    DateTime?
+  feedback       String    @default("")
+  score          Int?
+  createdAt      DateTime  @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  student   Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+  @@index([studentId])
+}
+
+model Message {
+  id          String    @id @default(cuid())
+  workspaceId String
+  studentId   String
+  sender      String    // TEACHER | STUDENT
+  text        String
+  readAt      DateTime?
+  createdAt   DateTime  @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  student   Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+  @@index([studentId])
 }

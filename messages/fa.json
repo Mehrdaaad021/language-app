@@ -20,7 +20,11 @@
     "landing": "ویرایشگر ویترین",
     "settings": "تنظیمات",
     "switchLocale": "Switch to English",
-    "backup": "بکاپ"
+    "backup": "بکاپ",
+    "homework": "تکلیف‌ها",
+"messages": "پیام‌ها",
+"student": "شاگرد",
+"studentPanel": "پنل شاگرد"
   },
   "Dashboard": {
     "brand": "دستیار کلاس",

@@ -20,7 +20,11 @@
     "landing": "Landing Editor",
     "settings": "Settings",
     "switchLocale": "فارسی",
-    "backup": "Backup"
+    "backup": "Backup",
+    "homework": "Homework",
+"messages": "Messages",
+"student": "Student",
+"studentPanel": "Student panel"
   },
   "Dashboard": {
     "brand": "Class Assistant",

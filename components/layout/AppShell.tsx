@@ -16,6 +16,8 @@ import {
   Palette,
   Settings as SettingsIcon,
   DatabaseBackup,
+  MessageCircle,
+  BookMarked,
 } from "lucide-react";
 import LocaleSwitcher from "@/components/LocaleSwitcher";
 import LogoutButton from "@/components/auth/LogoutButton";
@@ -24,17 +26,27 @@ import CommandPalette from "@/components/CommandPalette";
 import NotificationBell from "@/components/NotificationBell";
 import DockNav from "@/components/layout/DockNav";
 
-const NAV_ALL = [
+/* ── ناوبری معلم (همه‌ی امکانات) ── */
+const NAV_TEACHER = [
   { icon: LayoutDashboard, key: "dashboard", href: "/dashboard" },
   { icon: Palette, key: "landing", href: "/dashboard/landing-editor" },
   { icon: GraduationCap, key: "students", href: "/students" },
   { icon: CalendarDays, key: "sessions", href: "/sessions" },
   { icon: CalendarDays, key: "calendar", href: "/calendar" },
   { icon: Wallet, key: "payments", href: "/payments" },
+  { icon: BookMarked, key: "homework", href: "/homework" },
+  { icon: MessageCircle, key: "messages", href: "/messages" },
   { icon: NotebookPen, key: "notes", href: "/notes" },
   { icon: BarChart3, key: "analytics", href: "/analytics" },
   { icon: DatabaseBackup, key: "backup", href: "/backup" },
   { icon: SettingsIcon, key: "settings", href: "/settings" },
+];
+
+/* ── ناوبری شاگرد (ساده و متمرکز) ── */
+const NAV_STUDENT = [
+  { icon: LayoutDashboard, key: "dashboard", href: "/student" },
+  { icon: BookMarked, key: "homework", href: "/student/homework" },
+  { icon: MessageCircle, key: "messages", href: "/student/messages" },
 ];
 
 const spring = { type: "spring", stiffness: 380, damping: 30 } as const;
@@ -43,10 +55,12 @@ export default function AppShell({
   children,
   user,
   isOwner = false,
+  role = "TEACHER",
 }: {
   children: ReactNode;
   user?: { name: string; email: string };
   isOwner?: boolean;
+  role?: "TEACHER" | "STUDENT" | "OWNER";
 }) {
   const tn = useTranslations("Nav");
   const t = useTranslations("Dashboard");
@@ -54,10 +68,13 @@ export default function AppShell({
   const [paletteOpen, setPaletteOpen] = useState(false);
   const pathname = usePathname();
 
-  // ویرایشگر ویترین فقط برای مالک اصلی
-  const nav = NAV_ALL.filter((item) => item.key !== "landing" || isOwner);
+  // انتخاب nav بر اساس نقش + فیلتر landing editor برای مالک
+  const baseNav = role === "STUDENT" ? NAV_STUDENT : NAV_TEACHER;
+  const nav = baseNav.filter((item) => item.key !== "landing" || isOwner);
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
+
+  const brandName = role === "STUDENT" ? (t("brand") + (t("brand").includes("شاگرد") ? "" : " | شاگرد")) : t("brand");
 
   return (
     <MotionConfig reducedMotion="user">
@@ -75,7 +92,12 @@ export default function AppShell({
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#E8697B] to-[#D94F63] text-white shadow-lg">
               <BookOpen size={18} />
             </span>
-            <p className="text-sm font-extrabold">{t("brand")}</p>
+            <p className="text-sm font-extrabold">{role === "STUDENT" ? t("brand") : t("brand")}</p>
+            {role === "STUDENT" && (
+              <span className="chip-lux bg-[#e0f0e6] text-[#2f7a55]">
+                {useTranslations("Nav")("student")}
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-2">
             <NotificationBell compact />
@@ -120,20 +142,26 @@ export default function AppShell({
               </div>
               <div>
                 <p className="font-extrabold">{t("brand")}</p>
-                <p className="text-xs text-[var(--c-ink-soft)]">{t("tagline")}</p>
+                <p className="text-xs text-[var(--c-ink-soft)]">
+                  {role === "STUDENT"
+                    ? (useTranslations("Nav")("studentPanel") || t("tagline"))
+                    : t("tagline")}
+                </p>
               </div>
             </div>
 
-            <button
-              onClick={() => setPaletteOpen(true)}
-              className="glass mb-6 flex w-full items-center justify-between rounded-2xl px-4 py-2.5 text-xs font-bold text-[var(--c-ink-soft)] transition hover:bg-white/40 hover:text-[var(--c-ink)]"
-            >
-              <span className="flex items-center gap-2">
-                <Search size={14} />
-                {tp("placeholder")}
-              </span>
-              <kbd className="rounded-lg bg-white/40 px-1.5 py-0.5 text-[10px]">Ctrl K</kbd>
-            </button>
+            {role !== "STUDENT" && (
+              <button
+                onClick={() => setPaletteOpen(true)}
+                className="glass mb-6 flex w-full items-center justify-between rounded-2xl px-4 py-2.5 text-xs font-bold text-[var(--c-ink-soft)] transition hover:bg-white/40 hover:text-[var(--c-ink)]"
+              >
+                <span className="flex items-center gap-2">
+                  <Search size={14} />
+                  {tp("placeholder")}
+                </span>
+                <kbd className="rounded-lg bg-white/40 px-1.5 py-0.5 text-[10px]">Ctrl K</kbd>
+              </button>
+            )}
 
             <motion.nav
               initial="hidden"
@@ -213,9 +241,11 @@ export default function AppShell({
       </div>
 
       {/* داک شناور موبایل */}
-      <DockNav onQuickAdd={() => setPaletteOpen(true)} />
+      {role !== "STUDENT" && <DockNav onQuickAdd={() => setPaletteOpen(true)} />}
 
-      <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
+      {role !== "STUDENT" && (
+        <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
+      )}
     </MotionConfig>
   );
 }

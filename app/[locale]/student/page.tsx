@@ -1,12 +1,17 @@
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { CalendarDays, Wallet, NotebookPen } from "lucide-react";
+import { CalendarDays, Wallet, NotebookPen, Star } from "lucide-react";
 import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
 import { Stagger, StaggerItem } from "@/components/ui/Reveal";
 import { getSession } from "@/lib/auth";
 import { loadStudentArea } from "@/lib/server/queries";
+import { prisma } from "@/lib/prisma";
 import { formatNumber, formatDate, formatTime, formatWeekday } from "@/lib/format";
+import AttendanceConfirmButton from "@/components/portal/AttendanceConfirmButton";
+
+const FA_DIGITS = ["۰", "۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹"];
+const toFaStr = (s: string | number) => String(s).replace(/\d/g, (d) => FA_DIGITS[Number(d)]);
 
 export default async function StudentDashboardPage({
   params,
@@ -14,12 +19,21 @@ export default async function StudentDashboardPage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
+  const fa = locale === "fa";
   const t = await getTranslations({ locale, namespace: "Student" });
   const session = await getSession();
   if (!session || session.role !== "STUDENT") redirect(`/${locale}/login`);
 
   const bundle = await loadStudentArea(session.sub);
   if (!bundle) return null;
+
+  /* ── نمره + وضعیت تأیید حضور هر جلسه (مستقیم از دیتابیس) ── */
+  const sessionExtras = await prisma.session
+    .findMany({
+      where: { studentId: bundle.student.id },
+      select: { id: true, score: true, studentConfirmed: true },
+    })
+    .then((rows) => new Map(rows.map((r) => [r.id, r])));
 
   const upcoming = bundle.sessions.filter((s) => s.status === "upcoming");
   const paid = bundle.payments.filter((p) => p.status === "paid").reduce((a, p) => a + p.amount, 0);
@@ -58,18 +72,44 @@ export default async function StudentDashboardPage({
           <Card>
             <h2 className="mb-4 text-lg font-extrabold">{t("sessionsList")}</h2>
             <ul className="flex flex-col gap-3">
-              {bundle.sessions.slice(0, 5).map((se) => (
-                <li key={se.id} className="flex items-center gap-4 rounded-2xl bg-white/25 px-4 py-3">
-                  <div className="flex h-12 w-12 flex-col items-center justify-center rounded-xl bg-gradient-to-br from-[#FFE8C4] to-[#FFF4DE] shadow-inner">
-                    <span className="text-[9px] font-bold text-[var(--color-ink-soft)]">{formatWeekday(se.date, locale)}</span>
-                    <span className="text-[11px] font-extrabold">{formatTime(se.time, locale)}</span>
-                  </div>
-                  <p className="flex-1 truncate text-sm font-bold">{se.topic}</p>
-                  <Badge tone={se.status === "upcoming" ? "info" : se.status === "completed" ? "success" : "danger"}>
-                    {se.status === "upcoming" ? t("upcoming") : se.status === "completed" ? t("completed") : t("cancelled")}
-                  </Badge>
-                </li>
-              ))}
+              {bundle.sessions.slice(0, 5).map((se) => {
+                const extra = sessionExtras.get(se.id);
+                return (
+                  <li key={se.id} className="flex flex-col gap-2 rounded-2xl bg-white/25 px-4 py-3">
+                    <div className="flex items-center gap-4">
+                      <div className="flex h-12 w-12 flex-col items-center justify-center rounded-xl bg-gradient-to-br from-[#FFE8C4] to-[#FFF4DE] shadow-inner">
+                        <span className="text-[9px] font-bold text-[var(--color-ink-soft)]">{formatWeekday(se.date, locale)}</span>
+                        <span className="text-[11px] font-extrabold">{formatTime(se.time, locale)}</span>
+                      </div>
+                      <p className="flex-1 truncate text-sm font-bold">{se.topic}</p>
+                      <Badge tone={se.status === "upcoming" ? "info" : se.status === "completed" ? "success" : "danger"}>
+                        {se.status === "upcoming" ? t("upcoming") : se.status === "completed" ? t("completed") : t("cancelled")}
+                      </Badge>
+                    </div>
+
+                    {/* ── ردیف دوم: نمره + تأیید حضور ── */}
+                    <div className="flex items-center justify-between gap-2 ps-16">
+                      {extra?.score != null ? (
+                        <span className="chip-lux bg-[#e0f0e6] text-[#2f7a55]">
+                          <Star size={11} className="fill-[#2f7a55]" />
+                          {fa ? `نمره: ${toFaStr(extra.score)} از ${toFaStr(20)}` : `Score: ${extra.score}/20`}
+                        </span>
+                      ) : (
+                        <span className="text-[10px] text-[var(--color-ink-soft)]">
+                          {fa ? "هنوز نمره‌ای ثبت نشده" : "No score yet"}
+                        </span>
+                      )}
+
+                      {se.status === "completed" && (
+                        <AttendanceConfirmButton
+                          sessionId={se.id}
+                          confirmed={extra?.studentConfirmed ?? false}
+                        />
+                      )}
+                    </div>
+                  </li>
+                );
+              })}
             </ul>
           </Card>
         </StaggerItem>
