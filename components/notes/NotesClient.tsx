@@ -9,7 +9,7 @@ import { useToast } from "@/components/ui/Toast";
 import { useAppData } from "@/lib/store";
 import { createNote } from "@/lib/server/actions";
 import { uploadAttachment, type Attachment } from "@/lib/server/upload-actions";
-
+import JalaliDateInput from "@/components/ui/JalaliDateInput";
 const inputCls =
   "w-full rounded-xl border border-white/40 bg-white/40 px-4 py-2.5 text-sm font-bold outline-none transition focus:border-[#D94F63]";
 
@@ -140,7 +140,7 @@ function NoteForm({
           </div>
           <div>
             <label className="mb-1 block text-xs font-extrabold">{tf("date")}</label>
-            <input className={inputCls} type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+            <JalaliDateInput value={date} onChange={setDate} />
           </div>
 
           <div>
