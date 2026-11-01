@@ -1,5 +1,5 @@
 "use client";
-
+import JalaliDateInput from "@/components/ui/JalaliDateInput";
 import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Plus, Wallet, X } from "lucide-react";
@@ -88,7 +88,7 @@ function PaymentForm({ onClose, onDone }: { onClose: () => void; onDone: () => P
 
           <div>
             <label className="mb-1 block text-xs font-extrabold">{tf("date")}</label>
-            <input className={inputCls} type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+            <JalaliDateInput value={date} onChange={setDate} />
           </div>
 
           <div>

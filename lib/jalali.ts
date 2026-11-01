@@ -67,3 +67,8 @@ export function jalaliMonthDays(jy: number, jm: number): number {
 export function toFa(n: number | string): string {
   return String(n).replace(/\d/g, (d) => "۰۱۲۳۴۵۶۷۸۹"[Number(d)]);
 }
+/* ── نام ماه‌های شمسی ── */
+export const JALALI_MONTHS_FA = [
+  "فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور",
+  "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند",
+];

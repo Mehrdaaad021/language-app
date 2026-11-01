@@ -1,5 +1,5 @@
 "use client";
-
+import JalaliDateInput from "@/components/ui/JalaliDateInput";
 import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { CalendarDays, Plus, X } from "lucide-react";
@@ -83,7 +83,7 @@ function SessionForm({ onClose, onDone }: { onClose: () => void; onDone: () => P
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="mb-1 block text-xs font-extrabold">{tf("date")}</label>
-              <input className={inputCls} type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+              <JalaliDateInput value={date} onChange={setDate} />
             </div>
             <div>
               <label className="mb-1 block text-xs font-extrabold">{tf("time")}</label>
