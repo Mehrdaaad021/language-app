@@ -1,13 +1,33 @@
 "use client";
 
-/* نمودار خطی نرمِ درآمد ماهانه — سبک رفرنس (منحنی + سطح گرادیانی) */
+import { Wallet } from "lucide-react";
+
+/* نمودار خطی نرمِ درآمد ماهانه + حالت خالیِ طراحی‌شده */
 export default function IncomeSparkline({
   points,
   labels,
+  emptyLabel,
 }: {
   points: number[];
   labels: string[];
+  emptyLabel?: string;
 }) {
+  const isEmpty = points.every((p) => p === 0);
+
+  /* ── حالت خالی: باکس خط‌چین با پیام دوستانه ── */
+  if (isEmpty) {
+    return (
+      <div className="flex h-[170px] flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-[var(--c-primary)]/20 bg-[var(--c-surface-2)]/50">
+        <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#f6e7c6] text-[#b3701f]">
+          <Wallet size={20} />
+        </span>
+        <p className="text-xs font-bold text-[var(--c-ink-soft)]">
+          {emptyLabel ?? "هنوز درآمدی ثبت نشده — اولین پرداخت رو ثبت کن!"}
+        </p>
+      </div>
+    );
+  }
+
   const w = 560;
   const h = 170;
   const pad = 14;
@@ -19,7 +39,7 @@ export default function IncomeSparkline({
     h - pad - (p / max) * (h - pad * 2.4),
   ]);
 
-  /* منحنی نرم با نقاط میانی (quadratic smoothing) */
+  /* منحنی نرم با نقاط میانی */
   let line = `M ${coords[0]?.[0] ?? pad},${coords[0]?.[1] ?? h - pad}`;
   for (let i = 1; i < coords.length; i++) {
     const [x0, y0] = coords[i - 1];
@@ -43,7 +63,6 @@ export default function IncomeSparkline({
           </linearGradient>
         </defs>
 
-        {/* خطوط راهنمای افقی */}
         {[0.25, 0.5, 0.75].map((r) => (
           <line
             key={r}
@@ -67,7 +86,6 @@ export default function IncomeSparkline({
           strokeLinejoin="round"
         />
 
-        {/* نقطه‌های داده */}
         {coords.map(([x, y], i) => (
           <circle
             key={i}
@@ -77,7 +95,9 @@ export default function IncomeSparkline({
             fill="#fff"
             stroke="#d94f63"
             strokeWidth="2.5"
-          />
+          >
+            <title>{labels[i]}</title>
+          </circle>
         ))}
       </svg>
 

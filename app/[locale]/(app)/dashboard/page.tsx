@@ -99,10 +99,10 @@ export default async function DashboardPage({
   const doneCount = steps.filter((s) => s.done).length;
 
   const indicators = [
-    { icon: GraduationCap, label: t("activeStudents"), value: fmt(activeStudents), tint: "bg-[#f8d8e0] text-[#c2586b]" },
-    { icon: CalendarDays, label: t("sessionsThisWeek"), value: fmt(upcoming.length), tint: "bg-[#f6e7c6] text-[#b3701f]" },
-    { icon: NotebookPen, label: fa ? "یادداشت‌ها" : "Notes", value: fmt(notesCount), tint: "bg-[#e5dff2] text-[#7a5ba6]" },
-    { icon: AlertTriangle, label: t("overduePayments"), value: fmt(overdue), tint: "bg-[#f6d2ce] text-[#b3261e]" },
+    { icon: GraduationCap, label: t("activeStudents"), value: fmt(activeStudents), tint: "bg-[#f8d8e0] text-[#c2586b]", tile: "bg-[#f8d8e0]/50" },
+    { icon: CalendarDays, label: t("sessionsThisWeek"), value: fmt(upcoming.length), tint: "bg-[#f6e7c6] text-[#b3701f]", tile: "bg-[#f6e7c6]/50" },
+    { icon: NotebookPen, label: fa ? "یادداشت‌ها" : "Notes", value: fmt(notesCount), tint: "bg-[#e5dff2] text-[#7a5ba6]", tile: "bg-[#e5dff2]/50" },
+    { icon: AlertTriangle, label: t("overduePayments"), value: fmt(overdue), tint: "bg-[#f6d2ce] text-[#b3261e]", tile: "bg-[#f6d2ce]/50" },
   ];
 
   return (
@@ -167,7 +167,7 @@ export default async function DashboardPage({
                     {s.done ? <Check size={14} /> : fa ? toFaStr(String(i + 1)) : i + 1}
                   </span>
                   <div>
-                    <p className={`text-sm font-extrabold ${s.done ? "line-through opacity-60" : ""}`}>{s.title}</p>
+                    <p className={`text-sm font-extrabold ${s.done ? "opacity-55" : ""}`}>{s.title}</p>
                     <p className="text-[11px] text-[var(--c-ink-soft)]">{s.hint}</p>
                   </div>
                 </div>
@@ -263,6 +263,11 @@ export default async function DashboardPage({
           <IncomeSparkline
             points={chart.map((c) => c.total)}
             labels={chart.map((c) => (fa ? toFaStr(c.label) : c.label))}
+            emptyLabel={
+              fa
+                ? "هنوز درآمدی ثبت نشده — اولین پرداخت رو ثبت کن!"
+                : "No income yet — record your first payment!"
+            }
           />
         </div>
 
@@ -273,7 +278,7 @@ export default async function DashboardPage({
             {indicators.map((ind, i) => {
               const Icon = ind.icon;
               return (
-                <div key={i} className="rounded-2xl bg-[var(--c-surface-2)] p-3 transition hover:bg-[var(--c-surface-2)]/70">
+                <div key={i} className={`rounded-2xl ${ind.tile} p-3 transition hover:brightness-95`}>
                   <span className={`inline-flex h-8 w-8 items-center justify-center rounded-xl ${ind.tint}`}>
                     <Icon size={15} />
                   </span>
