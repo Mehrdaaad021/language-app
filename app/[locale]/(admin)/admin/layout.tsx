@@ -1,17 +1,23 @@
-import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
-import { getSession } from "@/lib/auth";
+import { requireAdmin } from "@/lib/admin";
+import AdminSidebar from "@/components/admin/AdminSidebar";
 
 export default async function AdminLayout({
-  params,
   children,
+  params,
 }: {
+  children: React.ReactNode;
   params: Promise<{ locale: string }>;
-  children: ReactNode;
 }) {
   const { locale } = await params;
-  const session = await getSession();
-  if (!session || session.role !== "ADMIN") redirect(`/${locale}/login`);
+  await requireAdmin();
 
-  return <>{children}</>;
+  return (
+    <div className="flex min-h-screen">
+      <AdminSidebar locale={locale} />
+      <main className="flex-1 p-6 md:p-10">
+        <div className="mx-auto max-w-7xl">{children}</div>
+      </main>
+    </div>
+  );
 }

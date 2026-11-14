@@ -1,222 +1,49 @@
-"use client";
+import { getAdminDashboard, getGrowthData } from "@/lib/server/admin-actions";
+import { Users, School, GraduationCap, Wallet, Ticket, AlertTriangle, TrendingUp } from "lucide-react";
+import AdminChartV2 from "@/components/admin/AdminChartV2";
 
-import { useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
-import { UserPlus, RefreshCw, Trash2, Copy, Shield, LogOut } from "lucide-react";
-import { motion } from "framer-motion";
-import { useRouter } from "@/i18n/navigation";
-import Button from "@/components/ui/Button";
-import Card from "@/components/ui/Card";
-import Badge from "@/components/ui/Badge";
-import { TextField } from "@/components/ui/Field";
-import Modal from "@/components/ui/Modal";
-import { useToast } from "@/components/ui/Toast";
-import { logoutAction } from "@/lib/server/auth-actions";
-import { listTeachers, createTeacher, resetTeacherPassword, deleteTeacher } from "@/lib/server/admin-actions";
+export default async function AdminDashboardPage() {
+  const [stats, growth] = await Promise.all([getAdminDashboard(), getGrowthData()]);
 
-type Teacher = {
-  id: string;
-  email: string;
-  name: string | null;
-  createdAt: string;
-  twoFactorEnabled: boolean;
-};
+  const fmt = (n: number) => new Intl.NumberFormat("fa-IR").format(n);
+  const toFa = (s: string) => s.replace(/\d/g, (d) => "۰۱۲۳۴۵۶۷۸۹"[Number(d)]);
 
-export default function AdminPage() {
-  const t = useTranslations("Admin");
-  const ta = useTranslations("Auth");
-  const toast = useToast();
-  const router = useRouter();
-  const [teachers, setTeachers] = useState<Teacher[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [createOpen, setCreateOpen] = useState(false);
-  const [newEmail, setNewEmail] = useState("");
-  const [newName, setNewName] = useState("");
-  const [generatedPassword, setGeneratedPassword] = useState<string | null>(null);
-  const [resetPassword, setResetPassword] = useState<string | null>(null);
-
-  const load = async () => {
-    setLoading(true);
-    try {
-      const list = await listTeachers();
-      setTeachers(list);
-    } catch {
-      toast(t("loadError"));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => { load(); }, []);
-
-  const handleLogout = async () => {
-    await logoutAction();
-    router.replace("/login");
-    router.refresh();
-  };
-
-  const handleCreate = async () => {
-    const res = await createTeacher(newEmail, newName);
-    if ("error" in res) {
-      toast(res.error);
-      return;
-    }
-    setGeneratedPassword(res.password);
-    setNewEmail("");
-    setNewName("");
-    load();
-  };
-
-  const handleReset = async (id: string) => {
-    const res = await resetTeacherPassword(id);
-    if ("error" in res) {
-      toast(res.error);
-      return;
-    }
-    setResetPassword(res.password);
-    load();
-  };
-
-  const handleDelete = async (id: string) => {
-    if (!confirm(t("confirmDelete"))) return;
-    const res = await deleteTeacher(id);
-    if ("error" in res) {
-      toast(res.error);
-      return;
-    }
-    toast(t("teacherDeleted"));
-    load();
-  };
-
-  const copyPassword = async (password: string) => {
-    await navigator.clipboard.writeText(password);
-    toast(t("passwordCopied"));
-  };
+  const cards = [
+    { icon: Users, label: "کاربران کل", value: fmt(stats.totalUsers), tint: "from-[#f8d8e0] to-[#fce8ed]" },
+    { icon: School, label: "معلم‌ها", value: fmt(stats.totalTeachers), tint: "from-[#f6e7c6] to-[#fbf0d9]" },
+    { icon: GraduationCap, label: "شاگردها", value: fmt(stats.totalStudents), tint: "from-[#e0f0e6] to-[#eaf7ee]" },
+    { icon: Wallet, label: "درآمد کل (تومان)", value: toFa(fmt(stats.totalRevenue)), tint: "from-[#e5dff2] to-[#efebf9]" },
+    { icon: TrendingUp, label: "جلسات ثبت‌شده", value: fmt(stats.totalSessions), tint: "from-[#f6e7c6] to-[#fbf0d9]" },
+    { icon: Ticket, label: "تیکت‌های باز", value: fmt(stats.openTickets), tint: "from-[#f6d2ce] to-[#fbe3e1]" },
+    { icon: AlertTriangle, label: "کاربران معلق", value: fmt(stats.suspendedUsers), tint: "from-[#f6d2ce] to-[#fbe3e1]" },
+  ];
 
   return (
-    <div className="min-h-screen p-6">
-      <div className="mx-auto max-w-4xl">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8 flex items-start justify-between gap-4"
-        >
-          <div className="flex items-center gap-3">
-            <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#E8697B] to-[#D94F63] text-white shadow-lg">
-              <Shield size={22} />
-            </span>
-            <div>
-              <h1 className="text-2xl font-extrabold md:text-3xl">{t("title")}</h1>
-              <p className="mt-1 text-xs text-[var(--color-ink-soft)]">{t("subtitle")}</p>
-            </div>
-          </div>
-          <Button variant="glass" icon={<LogOut size={15} />} onClick={handleLogout}>
-            {ta("logout")}
-          </Button>
-        </motion.div>
-
-        <Card>
-          <div className="mb-6 flex items-center justify-between">
-            <h2 className="text-lg font-extrabold">{t("teachers")}</h2>
-            <Button icon={<UserPlus size={16} />} onClick={() => setCreateOpen(true)}>
-              {t("createTeacher")}
-            </Button>
-          </div>
-
-          {loading ? (
-            <div className="space-y-3">
-              {[0, 1, 2].map((i) => (
-                <div key={i} className="h-16 animate-pulse rounded-2xl bg-white/30" />
-              ))}
-            </div>
-          ) : teachers.length === 0 ? (
-            <p className="py-12 text-center text-sm text-[var(--color-ink-soft)]">{t("noTeachers")}</p>
-          ) : (
-            <div className="space-y-3">
-              {teachers.map((teacher) => (
-                <div
-                  key={teacher.id}
-                  className="flex items-center justify-between gap-3 rounded-2xl bg-white/25 p-4 transition hover:bg-white/35"
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-bold">{teacher.name || "—"}</p>
-                    <p className="truncate text-xs text-[var(--color-ink-soft)]">{teacher.email}</p>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-2">
-                    {teacher.twoFactorEnabled && <Badge tone="success">{t("2faEnabled")}</Badge>}
-                    <Button variant="glass" icon={<RefreshCw size={14} />} onClick={() => handleReset(teacher.id)}>
-                      {t("resetPassword")}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      icon={<Trash2 size={14} />}
-                      onClick={() => handleDelete(teacher.id)}
-                      aria-label={t("deleteTeacher")}
-                    >
-                      {""}
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </Card>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-extrabold md:text-3xl">داشبورد ادمین</h1>
+        <p className="mt-1 text-sm text-[var(--c-ink-soft)]">نمای کلی از وضعیت پلتفرم</p>
       </div>
 
-      <Modal
-        open={createOpen}
-        onClose={() => { setCreateOpen(false); setGeneratedPassword(null); }}
-        title={t("createTeacher")}
-      >
-        {generatedPassword ? (
-          <div className="space-y-4">
-            <p className="text-sm text-[var(--color-ink-soft)]">{t("teacherCreated")}</p>
-            <div className="rounded-2xl bg-[rgba(217,79,99,0.1)] p-4">
-              <p className="mb-2 text-xs font-bold text-[#B23A4C]">{t("generatedPassword")}</p>
-              <div className="flex items-center gap-2">
-                <code className="flex-1 rounded-lg bg-white/50 px-3 py-2 font-mono text-sm">
-                  {generatedPassword}
-                </code>
-                <Button icon={<Copy size={14} />} onClick={() => copyPassword(generatedPassword)} aria-label={t("copyPassword")}>
-                  {""}
-                </Button>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {cards.map((c) => {
+          const Icon = c.icon;
+          return (
+            <div key={c.label} className={`card-lux bg-gradient-to-br ${c.tint} p-5`}>
+              <div className="flex items-start justify-between">
+                <Icon size={22} className="text-[#4a2430]" />
               </div>
+              <p className="mt-3 text-3xl font-extrabold tabular-nums text-[#40222c]">{c.value}</p>
+              <p className="mt-1 text-xs font-bold text-[#7c5a63]">{c.label}</p>
             </div>
-            <p className="text-xs text-[var(--color-ink-soft)]">{t("passwordHint")}</p>
-            <Button onClick={() => { setCreateOpen(false); setGeneratedPassword(null); }} className="w-full">
-              {t("done")}
-            </Button>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <TextField label={t("email")} type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} />
-            <TextField label={t("name")} value={newName} onChange={(e) => setNewName(e.target.value)} />
-            <div className="flex gap-2">
-              <Button variant="ghost" onClick={() => setCreateOpen(false)} className="flex-1">
-                {t("cancel")}
-              </Button>
-              <Button onClick={handleCreate} className="flex-1">
-                {t("create")}
-              </Button>
-            </div>
-          </div>
-        )}
-      </Modal>
+          );
+        })}
+      </div>
 
-      <Modal open={!!resetPassword} onClose={() => setResetPassword(null)} title={t("passwordReset")}>
-        <div className="space-y-4">
-          <p className="text-sm text-[var(--color-ink-soft)]">{t("passwordResetHint")}</p>
-          <div className="flex items-center gap-2">
-            <code className="flex-1 rounded-lg bg-white/50 px-3 py-2 font-mono text-sm">{resetPassword}</code>
-            <Button icon={<Copy size={14} />} onClick={() => copyPassword(resetPassword!)} aria-label={t("copyPassword")}>
-              {""}
-            </Button>
-          </div>
-          <Button onClick={() => setResetPassword(null)} className="w-full">
-            {t("done")}
-          </Button>
-        </div>
-      </Modal>
+      <div className="card-lux p-6">
+        <h2 className="mb-4 text-base font-extrabold">رشد ۳۰ روز اخیر</h2>
+        <AdminChartV2 data={growth} />
+      </div>
     </div>
   );
 }

@@ -14,7 +14,6 @@ function homeFor(role: "ADMIN" | "TEACHER" | "STUDENT", locale: string) {
   return `/${locale}/student`;
 }
 
-/* انقضای لغزنده: اگه نصف عمر توکن گذشته، توکن تازه بده */
 async function slide(req: NextRequest, res: NextResponse, session: Sess | null, raw?: string) {
   if (!session || !raw) return res;
   try {
@@ -61,49 +60,43 @@ export default async function middleware(req: NextRequest) {
   const isChangePassword = stripped === "/change-password";
   const isStudentArea = stripped === "/student" || stripped.startsWith("/student/");
   const isAdminArea = stripped === "/admin" || stripped.startsWith("/admin/");
+  const isPublicTeacherLanding = stripped.startsWith("/t/");
   const isLandingEditor =
     stripped === "/dashboard/landing-editor" || stripped.startsWith("/dashboard/landing-editor/");
-  const isTeacherArea =
-    !isPublic &&
-    !isInvite &&
-    !isAuthPage &&
-    !isVerify2fa &&
-    !isStudentArea &&
-    !isAdminArea &&
-    !isChangePassword &&
-    !isLandingEditor;
 
   const url = req.nextUrl.clone();
   const done = (res: NextResponse) => slide(req, res, session, raw);
 
-  if (isInvite) return done(intlMiddleware(req));
-
-  if (session && session.pending2fa) {
-    if (!isVerify2fa) {
-      url.pathname = `/${locale}/login/verify-2fa`;
-      return NextResponse.redirect(url);
-    }
+  // ── 1) مسیرهای عمومی که auth نمی‌خوان
+  if (isPublic || isInvite || isPublicTeacherLanding) {
     return done(intlMiddleware(req));
   }
 
+  // ── 2) کاربر لاگین نکرده → login
   if (!session) {
-    if (!isPublic) {
-      url.pathname = `/${locale}/login`;
-      return NextResponse.redirect(url);
-    }
-    return done(intlMiddleware(req));
+    url.pathname = `/${locale}/login`;
+    return NextResponse.redirect(url);
   }
 
+  // ── 3) 2FA معلق
+  if (session.pending2fa && !isVerify2fa) {
+    url.pathname = `/${locale}/login/verify-2fa`;
+    return NextResponse.redirect(url);
+  }
+
+  // ── 4) صفحه‌ی auth برای کاربر لاگین‌شده → home
   if (isAuthPage) {
     url.pathname = homeFor(session.role, locale);
     return NextResponse.redirect(url);
   }
 
+  // ── 5) تغییر رمز اجباری
   if (session.mustChangePassword && !isChangePassword) {
     url.pathname = `/${locale}/change-password`;
     return NextResponse.redirect(url);
   }
 
+  // ── 6) landing-editor قدیمی (فقط owner)
   if (isLandingEditor) {
     if (session.role !== "TEACHER" || session.email !== process.env.OWNER_EMAIL) {
       url.pathname = `/${locale}/dashboard`;
@@ -112,26 +105,20 @@ export default async function middleware(req: NextRequest) {
     return done(intlMiddleware(req));
   }
 
-  if (session.role === "ADMIN") {
-    if (isStudentArea || isTeacherArea) {
-      url.pathname = `/${locale}/admin`;
-      return NextResponse.redirect(url);
-    }
-    return done(intlMiddleware(req));
-  }
-
-  if (session.role === "TEACHER") {
-    if (isStudentArea || isAdminArea) {
-      url.pathname = `/${locale}/dashboard`;
-      return NextResponse.redirect(url);
-    }
-    return done(intlMiddleware(req));
-  }
-
-  if (!isStudentArea && !isChangePassword) {
+  // ── 7) محافظت role (layout.tsx چک دقیق platformRole رو انجام می‌ده)
+  if (session.role === "STUDENT" && !isStudentArea && !isChangePassword) {
     url.pathname = `/${locale}/student`;
     return NextResponse.redirect(url);
   }
+
+  if (session.role === "TEACHER" && isStudentArea) {
+    url.pathname = `/${locale}/dashboard`;
+    return NextResponse.redirect(url);
+  }
+
+  // ادمین و معلم می‌تونن به admin/* دسترسی داشته باشن
+  // چک platformRole توسط requireAdmin() در admin/layout.tsx انجام می‌شه
+
   return done(intlMiddleware(req));
 }
 

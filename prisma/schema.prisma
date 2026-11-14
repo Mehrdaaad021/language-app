@@ -8,152 +8,156 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-model Workspace {
-  id        String    @id @default(cuid())
-  name      String
-  ownerId   String    @unique
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-    homeworks Homework[]
-  messages  Message[]
-  notes     Note[]
-  payments  Payment[]
-  sessions  Session[]
-  students  Student[]
-  owner     User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-}
-
-model User {
-  id                 String         @id @default(cuid())
-  email              String         @unique
-  name               String?
-  password           String
-  role               Role           @default(STUDENT)
-  createdAt          DateTime       @default(now())
-  updatedAt          DateTime       @updatedAt
-  twoFactorEnabled   Boolean        @default(false)
-  twoFactorSecret    String?
-  mustChangePassword Boolean        @default(false)
-  backupCodes        String?
-  inviteExpiresAt    DateTime?
-  notifications      Notification[]
-  student            Student?
-  workspace          Workspace?
-}
-
-model LoginAttempt {
-  id        String   @id @default(cuid())
-  email     String
-  createdAt DateTime @default(now())
-
-  @@index([email, createdAt])
-}
-
-model Student {
-  id              String     @id @default(cuid())
-  userId          String?    @unique
-  name            String
-  phone           String?
-  email           String?
-  level           String?
-  term            String?
-  active          Boolean    @default(true)
-  createdAt       DateTime   @default(now())
-  inviteToken     String?    @unique
-  invitedAt       DateTime?
-  workspaceId     String?
-  inviteExpiresAt DateTime?
-  notes           Note[]
-  payments        Payment[]
-  sessions        Session[]
-  user            User?      @relation(fields: [userId], references: [id])
-  workspace       Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  homeworks Homework[]
-  messages  Message[]
-  @@index([workspaceId, name])
-}
-
-model Session {
-  id          String        @id @default(cuid())
-  studentId   String
-  date        DateTime
-  topic       String?
-  status      SessionStatus @default(SCHEDULED)
-  createdAt   DateTime      @default(now())
-  workspaceId String?
-  student     Student       @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  workspace   Workspace?    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-    score            Int?
-  studentConfirmed Boolean   @default(false)
-  confirmedAt      DateTime?
-
-  @@index([workspaceId, studentId, date])
-  @@index([workspaceId, status, date])
-}
-
-model Payment {
-  id          String        @id @default(cuid())
-  studentId   String
-  amount      Int
-  date        DateTime
-  status      PaymentStatus @default(PENDING)
-  createdAt   DateTime      @default(now())
-  workspaceId String?
-  student     Student       @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  workspace   Workspace?    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-
-  @@index([workspaceId, studentId, date])
-  @@index([workspaceId, status, date])
-}
-
-model Note {
-  id          String     @id @default(cuid())
-  studentId   String
-  title       String
-  content     String
-  date        DateTime
-  attachments Json       @default("[]")
-  createdAt   DateTime   @default(now())
-  workspaceId String?
-  student     Student    @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  workspace   Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-
-  @@index([workspaceId, studentId, date])
-}
-
-model Notification {
-  id        String   @id @default(cuid())
-  userId    String
-  title     String
-  message   String
-  read      Boolean  @default(false)
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model SiteConfig {
-  id        Int      @id @default(1)
-  config    Json
-  updatedAt DateTime @updatedAt
-}
+/* ═══════════════════ ENUMS ═══════════════════ */
 
 enum Role {
   TEACHER
   STUDENT
+}
+
+enum PlatformAccess {
+  USER
   ADMIN
 }
 
-enum SessionStatus {
-  SCHEDULED
-  COMPLETED
-  CANCELLED
+/* ═══════════════════ USER (حساب کاربری) ═══════════════════ */
+
+model User {
+  id                  String           @id @default(cuid())
+  name                String?
+  email               String           @unique
+  password            String
+  mustChangePassword  Boolean          @default(false)
+  role                Role             @default(TEACHER)
+  platformRole        PlatformAccess   @default(USER)
+  suspended           Boolean          @default(false)
+  suspendedAt         DateTime?
+  twoFactorEnabled    Boolean          @default(false)
+  twoFactorSecret     String?
+  backupCodes         String?
+  inviteExpiresAt     DateTime?
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+
+  workspaces      Workspace[]
+  student         Student?
+  notifications   Notification[]
+  supportTickets  SupportTicket[]
 }
 
-enum PaymentStatus {
-  PENDING
-  PAID
-  OVERDUE
+/* ═══════════════════ WORKSPACE (کلاس معلم) ═══════════════════ */
+
+model Workspace {
+  id         String    @id @default(cuid())
+  name       String
+  ownerId    String    @unique
+  verified   Boolean   @default(false)
+  verifiedAt DateTime?
+  suspended  Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  slug    String?         @unique
+  landing LandingContent?
+  owner     User        @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  students  Student[]
+  sessions  Session[]
+  payments  Payment[]
+  notes     Note[]
+  homeworks Homework[]
+  messages  Message[]
+    bookings BookingRequest[]
 }
+
+/* ═══════════════════ STUDENT (شاگرد) ═══════════════════ */
+
+model Student {
+  id                String    @id @default(cuid())
+  workspaceId       String
+  userId            String?   @unique
+  name              String
+  email             String?
+  phone             String?
+  level             String?
+  term              String?
+  active            Boolean   @default(true)
+  verified          Boolean   @default(false)
+  inviteToken       String?   @unique
+  invitedAt         DateTime?
+  inviteExpiresAt   DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @default(now()) @updatedAt
+
+  workspace  Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user       User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
+  sessions   Session[]
+  payments   Payment[]
+  notes      Note[]
+  homeworks  Homework[]
+  messages   Message[]
+
+  @@index([workspaceId])
+}
+
+/* ═══════════════════ SESSION (جلسه) ═══════════════════ */
+
+model Session {
+  id               String    @id @default(cuid())
+  workspaceId      String
+  studentId        String
+  date             DateTime
+  topic            String?
+  status           String    @default("SCHEDULED") // SCHEDULED | COMPLETED | CANCELLED
+  score            Int?
+  studentConfirmed Boolean   @default(false)
+  confirmedAt      DateTime?
+  createdAt        DateTime  @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  student   Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+  @@index([studentId])
+}
+
+/* ═══════════════════ PAYMENT (پرداخت) ═══════════════════ */
+
+model Payment {
+  id          String   @id @default(cuid())
+  workspaceId String
+  studentId   String
+  amount      Int
+  date        DateTime
+  status      String   @default("PENDING") // PENDING | PAID | OVERDUE
+  createdAt   DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  student   Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+  @@index([studentId])
+}
+
+/* ═══════════════════ NOTE (دفترچه مشق) ═══════════════════ */
+
+model Note {
+  id          String   @id @default(cuid())
+  workspaceId String
+  studentId   String
+  title       String
+  content     String
+  date        DateTime
+  attachments Json     @default("[]")
+  createdAt   DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  student   Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+  @@index([studentId])
+}
+
+/* ═══════════════════ HOMEWORK (تکلیف) ═══════════════════ */
+
 model Homework {
   id             String    @id @default(cuid())
   workspaceId    String
@@ -175,6 +179,8 @@ model Homework {
   @@index([studentId])
 }
 
+/* ═══════════════════ MESSAGE (چت) ═══════════════════ */
+
 model Message {
   id          String    @id @default(cuid())
   workspaceId String
@@ -189,4 +195,81 @@ model Message {
 
   @@index([workspaceId])
   @@index([studentId])
+}
+
+/* ═══════════════════ NOTIFICATION (اعلان) ═══════════════════ */
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+/* ═══════════════════ LOGIN ATTEMPT (ضد brute-force) ═══════════════════ */
+
+model LoginAttempt {
+  id        String   @id @default(cuid())
+  email     String
+  success   Boolean
+  ip        String?
+  createdAt DateTime @default(now())
+
+  @@index([email, createdAt])
+}
+/* ═══════════════════ SUPPORT TICKET (تیکت پشتیبانی) ═══════════════════ */
+
+model SupportTicket {
+  id        String    @id @default(cuid())
+  userId    String
+  subject   String
+  message   String
+  status    String    @default("OPEN") // OPEN | REPLIED | CLOSED
+  reply     String    @default("")
+  createdAt DateTime  @default(now())
+  repliedAt DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+}
+/* ═══════════════════ LANDING CONTENT (لندینگ شخصی هر معلم) ═══════════════════ */
+
+model LandingContent {
+  id           String   @id @default(cuid())
+  workspaceId  String?  @unique
+  heroBadge    String   @default("")
+  heroTitle1   String   @default("")
+  heroTitle2   String   @default("")
+  heroSub      String   @default("")
+  ctaPrimary   String   @default("")
+  ctaSecondary String   @default("")
+  accentColor  String   @default("#D94F63")
+  aboutText    String   @default("")
+  contactInfo  String   @default("")
+  features     Json     @default("[]")
+  testimonials Json     @default("[]")
+  pricing      Json     @default("[]")
+  updatedAt    DateTime @updatedAt
+
+  workspace Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+}
+model BookingRequest {
+  id          String   @id @default(cuid())
+  workspaceId String
+  name        String
+  phone       String
+  note        String   @default("")
+  status      String   @default("NEW")
+  createdAt   DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
 }

@@ -1,27 +1,37 @@
-﻿import type { ReactNode } from "react";
-import { redirect } from "next/navigation";
-import AppShell from "@/components/layout/AppShell";
+﻿import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
-import { isOwner } from "@/lib/server/owner-actions";
+import { prisma } from "@/lib/prisma";
+import AppShell from "@/components/layout/AppShell";
 
 export default async function AppLayout({
-  params,
   children,
+  params,
 }: {
+  children: React.ReactNode;
   params: Promise<{ locale: string }>;
-  children: ReactNode;
 }) {
   const { locale } = await params;
   const session = await getSession();
-  if (!session || session.role !== "TEACHER") redirect(`/${locale}/login`);
 
-  const owner = await isOwner();
+  if (!session) redirect(`/${locale}/login`);
+  if (session.role === "STUDENT") redirect(`/${locale}/student`);
+
+  // ── ساخت آبجکت user برای AppShell ──
+  const dbUser = await prisma.user.findUnique({
+    where: { id: session.sub },
+    select: { name: true, email: true },
+  });
+
+  const user = {
+    name: dbUser?.name || session.name || "کاربر",
+    email: dbUser?.email || session.email || "",
+  };
+
+  // ── آیا مالک اصلی اپ هست؟ (برای landing-editor قدیمی) ──
+  const isOwner = session.email === process.env.OWNER_EMAIL;
 
   return (
-    <AppShell
-      user={{ name: session.name ?? session.email, email: session.email }}
-      isOwner={owner}
-    >
+    <AppShell user={user} isOwner={isOwner} role="TEACHER">
       {children}
     </AppShell>
   );

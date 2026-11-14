@@ -1,5 +1,6 @@
 "use client";
 
+import AdminShortcut from "@/components/layout/AdminShortcut";
 import { useState, type ReactNode } from "react";
 import { AnimatePresence, MotionConfig, motion } from "framer-motion";
 import { useTranslations } from "next-intl";
@@ -18,6 +19,7 @@ import {
   DatabaseBackup,
   MessageCircle,
   BookMarked,
+  CalendarCheck,
 } from "lucide-react";
 import LocaleSwitcher from "@/components/LocaleSwitcher";
 import LogoutButton from "@/components/auth/LogoutButton";
@@ -40,6 +42,7 @@ const NAV_TEACHER = [
   { icon: BarChart3, key: "analytics", href: "/analytics" },
   { icon: DatabaseBackup, key: "backup", href: "/backup" },
   { icon: SettingsIcon, key: "settings", href: "/settings" },
+  { icon: CalendarCheck, key: "bookings", href: "/bookings" },
 ];
 
 /* ── ناوبری شاگرد (ساده و متمرکز) ── */
@@ -199,6 +202,9 @@ export default function AppShell({
                 </motion.div>
               ))}
             </motion.nav>
+
+            {/* ── دکمه‌ی پنل ادمین (فقط برای مالک پلتفرم) ── */}
+            {role !== "STUDENT" && <AdminShortcut />}
 
             <div className="mt-4 flex flex-col gap-3">
               {user && (
