@@ -23,7 +23,7 @@ async function isRateLimited(email: string): Promise<boolean> {
 }
 
 async function recordFailedAttempt(email: string): Promise<void> {
-  await prisma.loginAttempt.create({ data: { email } });
+  await prisma.loginAttempt.create({ data: { email, success: false } });
   await prisma.loginAttempt.deleteMany({
     where: { createdAt: { lt: new Date(Date.now() - 24 * 60 * 60 * 1000) } },
   });
@@ -63,7 +63,7 @@ export async function setupTeacher(input: unknown): Promise<AuthResult> {
   const parsed = setupSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "invalid" };
 
-  const teachers = await prisma.user.count({ where: { role: { in: ["TEACHER", "ADMIN"] } } });
+  const teachers = await prisma.user.count({ where: { role: "TEACHER" } });
   if (teachers > 0) return { ok: false, error: "alreadySetup" };
 
   const dup = await prisma.user.findUnique({ where: { email: parsed.data.email } });

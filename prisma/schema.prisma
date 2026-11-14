@@ -273,3 +273,10 @@ model BookingRequest {
 
   @@index([workspaceId])
 }
+/* ═══════════════════ SITE CONFIG (محتوای لندینگ اصلی) ═══════════════════ */
+
+model SiteConfig {
+  id        Int      @id @default(1)
+  config    Json
+  updatedAt DateTime @updatedAt
+}
