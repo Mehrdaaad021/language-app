@@ -1,5 +1,5 @@
 "use server";
-
+import { requireStudentContext } from "./guards";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
@@ -30,6 +30,7 @@ async function requireStudentRow() {
 
 /* ═══════════ ۱) تأیید حضور شاگرد ═══════════ */
 export async function confirmAttendance(sessionId: string): Promise<{ ok: boolean; error?: string }> {
+  const { studentId, workspaceId } = await requireStudentContext();
   const { student } = await requireStudentRow();
   const row = await prisma.session.findFirst({
     where: { id: sessionId, studentId: student.id },
@@ -94,6 +95,7 @@ export async function createHomework(input: z.input<typeof homeworkSchema>): Pro
 
 /* ═══════════ ۳) تکلیف: تحویل توسط شاگرد ═══════════ */
 export async function submitHomework(homeworkId: string, text: string): Promise<{ ok: boolean; error?: string }> {
+  const { studentId, workspaceId } = await requireStudentContext();
   const { student } = await requireStudentRow();
   const row = await prisma.homework.findFirst({
     where: { id: homeworkId, studentId: student.id },
@@ -233,6 +235,7 @@ export async function markThreadRead(studentId: string): Promise<{ ok: boolean }
 /* ═══════════ ۷) Fetchers ═══════════ */
 
 export async function getMyPortalExtras() {
+  const { studentId, workspaceId } = await requireStudentContext();
   const { student } = await requireStudentRow();
   const [homeworks, messages, sessions] = await Promise.all([
     prisma.homework.findMany({ where: { studentId: student.id }, orderBy: { createdAt: "desc" } }),

@@ -1,5 +1,5 @@
 "use server";
-
+import { clientIp, enforceRateLimit } from "./guards";
 import { prisma } from "@/lib/prisma";
 import { requireTeacherAction } from "@/lib/auth";
 
@@ -144,6 +144,8 @@ const DEFAULT_EN: LandingContent = {
 };
 
 export async function getSiteConfig(): Promise<SiteConfigData> {
+  const ip = await clientIp();
+await enforceRateLimit(`siteconfig:${ip}`, 120, 3600);
   const row = await prisma.siteConfig.findFirst();
   const stored = (row?.config ?? {}) as Partial<SiteConfigData>;
   return {

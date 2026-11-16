@@ -1,5 +1,5 @@
 "use server";
-
+import { clientIp, enforceRateLimit } from "./guards";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin";
 
@@ -123,6 +123,8 @@ export async function upsertLanding(input: LandingData): Promise<{ ok: boolean; 
 /* ═══════════ لندینگ عمومی /t/[slug] ═══════════ */
 
 export async function getPublicLandingBySlug(slug: string) {
+  const ip = await clientIp();
+await enforceRateLimit(`landing:${ip}`, 120, 3600);
   const ws = await prisma.workspace.findUnique({
     where: { slug },
     include: { owner: true, landing: true, _count: { select: { students: true } } },
@@ -152,9 +154,12 @@ export async function getPublicLandingBySlug(slug: string) {
 /* ═══════════ رزرو جلسه (Booking) ═══════════ */
 
 export async function createBookingRequest(
+  
   slug: string,
   input: { name: string; phone: string; note?: string }
 ): Promise<{ ok: boolean }> {
+  const ip = await clientIp();
+await enforceRateLimit(`booking:${ip}`, 5, 3600);
   const ws = await prisma.workspace.findUnique({ where: { slug } });
   if (!ws || ws.suspended) return { ok: false };
 

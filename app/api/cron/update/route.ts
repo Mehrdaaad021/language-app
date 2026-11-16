@@ -1,99 +1,47 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { sendOverdueEmail } from "@/lib/email";
 
 export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const maxDuration = 60;
 
-export async function GET(request: Request) {
-  const authHeader = request.headers.get("authorization");
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+/* ── قفل: فقط Vercel Cron یا فراخوان با Bearer CRON_SECRET ── */
+function authorized(req: Request): boolean {
+  const auth = req.headers.get("authorization");
+  return !!process.env.CRON_SECRET && auth === `Bearer ${process.env.CRON_SECRET}`;
+}
+
+export async function GET(req: Request) {
+  if (!authorized(req)) {
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
-  try {
-    const now = new Date();
+  const now = new Date();
 
-    /* ── ۱. پیدا کردن پرداخت‌های معوق‌شده (قبل از تغییر وضعیت) ── */
-    const becomingOverdue = await prisma.payment.findMany({
-      where: { status: "PENDING", date: { lt: now } },
-      include: {
-        student: true,
-        workspace: { include: { owner: true } },
-      },
-    });
+  // ۱) جلسات گذشته‌ی برگزارنشده → برگزارشده
+  const completed = await prisma.session.updateMany({
+    where: { status: "SCHEDULED", date: { lt: now } },
+    data: { status: "COMPLETED" },
+  });
 
-    /* ── ۲. تغییر وضعیت به OVERDUE ── */
-    const overdueResult = await prisma.payment.updateMany({
-      where: { status: "PENDING", date: { lt: now } },
-      data: { status: "OVERDUE" },
-    });
+  // ۲) پاک‌سازی رکوردهای rate-limit منقضی
+  const cleanedLimits = await prisma.rateLimit.deleteMany({
+    where: { resetAt: { lt: now } },
+  });
 
-    /* ── ۳. ایمیل به شاگرد + نوتیفیکیشن برای معلم ── */
-    let emailsSent = 0;
-    let notificationsCreated = 0;
+  // ۳) پاک‌سازی تلاش‌های ورود قدیمی‌تر از ۲۴ ساعت
+  const cleanedAttempts = await prisma.loginAttempt.deleteMany({
+    where: { createdAt: { lt: new Date(now.getTime() - 24 * 60 * 60 * 1000) } },
+  });
 
-    for (const p of becomingOverdue) {
-      const owner = p.workspace?.owner;
-      const faName = /[\u0600-\u06FF]/.test(owner?.name ?? "");
-      const locale: "fa" | "en" = faName ? "fa" : "en";
-      const dateStr = p.date.toISOString().split("T")[0];
+  return NextResponse.json({
+    ok: true,
+    completed: completed.count,
+    cleanedLimits: cleanedLimits.count,
+    cleanedAttempts: cleanedAttempts.count,
+    at: now.toISOString(),
+  });
+}
 
-      // ایمیل به شاگرد
-      if (p.student.email) {
-        const res = await sendOverdueEmail({
-          to: p.student.email,
-          studentName: p.student.name,
-          teacherName: owner?.name ?? (faName ? "معلم شما" : "Your teacher"),
-          amount: p.amount,
-          date: dateStr,
-          locale,
-        });
-        if (res.ok) emailsSent++;
-      }
-
-      // نوتیفیکیشن برای معلم
-      if (owner) {
-        await prisma.notification.create({
-          data: {
-            userId: owner.id,
-            title: locale === "fa" ? "پرداخت معوق" : "Overdue payment",
-            message:
-              locale === "fa"
-                ? `پرداخت ${p.student.name} (${dateStr}) معوق شد.`
-                : `${p.student.name}'s payment (${dateStr}) is now overdue.`,
-          },
-        });
-        notificationsCreated++;
-      }
-    }
-
-    /* ── ۴. پاک‌سازی لینک‌های دعوت منقضی ── */
-    const expiredInvites = await prisma.student.updateMany({
-      where: {
-        inviteExpiresAt: { lt: now },
-        inviteToken: { not: null },
-      },
-      data: { inviteToken: null, invitedAt: null, inviteExpiresAt: null },
-    });
-
-    /* ── ۵. پاک‌سازی تلاش‌های لاگین قدیمی ── */
-    await prisma.loginAttempt.deleteMany({
-      where: { createdAt: { lt: new Date(now.getTime() - 24 * 60 * 60 * 1000) } },
-    });
-
-    return NextResponse.json({
-      success: true,
-      stats: {
-        paymentsMarkedOverdue: overdueResult.count,
-        emailsSent,
-        notificationsCreated,
-        invitesCleaned: expiredInvites.count,
-        timestamp: now.toISOString(),
-      },
-    });
-  } catch (error) {
-    console.error("Cron error:", error);
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
-  }
+export async function POST(req: Request) {
+  return GET(req);
 }

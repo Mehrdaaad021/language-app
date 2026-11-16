@@ -1,5 +1,5 @@
 "use server";
-
+import { requireTeacherContext } from "./guards";
 import { randomBytes } from "crypto";
 import { put } from "@vercel/blob";
 import { getSession } from "@/lib/auth";
@@ -18,10 +18,12 @@ export type Attachment = {
  * اگه بعداً @vercel/blob ≥ 0.27 نصب شد، می‌تونیم private + signed رو برگردونیم.
  */
 export async function signedUrl(pathnameOrUrl: string): Promise<string> {
+  const { workspaceId } = await requireTeacherContext();
   return pathnameOrUrl;
 }
 
 export async function signAttachments(raw: unknown): Promise<Attachment[]> {
+  const { workspaceId } = await requireTeacherContext();
   if (!Array.isArray(raw)) return [];
   return raw as Attachment[];
 }

@@ -280,3 +280,9 @@ model SiteConfig {
   config    Json
   updatedAt DateTime @updatedAt
 }
+model RateLimit {
+  key       String   @id
+  count     Int      @default(0)
+  resetAt   DateTime
+  updatedAt DateTime @updatedAt
+}

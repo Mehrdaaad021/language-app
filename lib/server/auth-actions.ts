@@ -1,5 +1,5 @@
 "use server";
-
+import { clientIp, enforceRateLimit } from "./guards";
 import bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
 import { z } from "zod";
@@ -60,6 +60,8 @@ const setupSchema = z.object({
 });
 
 export async function setupTeacher(input: unknown): Promise<AuthResult> {
+  const ip = await clientIp();
+await enforceRateLimit(`setup:${ip}`, 3, 3600);
   const parsed = setupSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "invalid" };
 
@@ -86,6 +88,8 @@ export async function setupTeacher(input: unknown): Promise<AuthResult> {
 const loginSchema = z.object({ email: emailSchema, password: z.string().min(1) });
 
 export async function loginAction(input: unknown): Promise<AuthResult> {
+  const ip = await clientIp();
+await enforceRateLimit(`login:${ip}`, 20, 600);
   const parsed = loginSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "invalid" };
 

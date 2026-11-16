@@ -1,5 +1,5 @@
 "use server";
-
+import { clientIp, enforceRateLimit } from "./guards";
 import { randomBytes } from "crypto";
 import bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
@@ -90,6 +90,8 @@ export async function revokeInviteLink(studentId: string): Promise<{ ok: boolean
 }
 
 export async function getInviteInfo(token: string): Promise<InviteInfo | null> {
+  const ip = await clientIp();
+await enforceRateLimit(`invite-info:${ip}`, 60, 3600);
   const student = await prisma.student.findUnique({ where: { inviteToken: token } });
   if (!student) return null;
 
@@ -126,6 +128,9 @@ const claimSchema = z.object({
 });
 
 export async function claimInvite(input: unknown): Promise<{ ok: true } | { ok: false; error: string }> {
+  const ip = await clientIp();
+await enforceRateLimit(`invite-claim:${ip}`, 10, 3600);
+await enforceRateLimit(`reg:${ip}`, 5, 86400); // ≤۵ حساب در روز per IP
   const parsed = claimSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "invalid" };
 

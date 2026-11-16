@@ -1,5 +1,5 @@
 "use server";
-
+import { requireTeacherContext } from "./guards";
 import { getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
 import { getTeacherWorkspace } from "./workspace";
@@ -13,6 +13,7 @@ export type AppNotification = {
 };
 
 export async function getTeacherNotifications(): Promise<AppNotification[]> {
+  const { userId, workspaceId } = await requireTeacherContext();
   const ctx = await getTeacherWorkspace();
   if (!ctx) return [];
 

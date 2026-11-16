@@ -5,7 +5,6 @@ import { routing } from "./i18n/routing";
 import { SESSION_COOKIE, SESSION_MAX_AGE, createSessionToken, verifySessionToken } from "./lib/session";
 
 const intlMiddleware = createMiddleware(routing);
-
 type Sess = NonNullable<Awaited<ReturnType<typeof verifySessionToken>>>;
 
 function homeFor(role: "ADMIN" | "TEACHER" | "STUDENT", locale: string) {
@@ -14,32 +13,37 @@ function homeFor(role: "ADMIN" | "TEACHER" | "STUDENT", locale: string) {
   return `/${locale}/student`;
 }
 
+function harden(res: NextResponse, isPrivate: boolean) {
+  res.headers.set("X-Content-Type-Options", "nosniff");
+  res.headers.set("X-Frame-Options", "DENY");
+  res.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  res.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+  res.headers.set("Cross-Origin-Opener-Policy", "same-origin");
+  if (process.env.NODE_ENV === "production") {
+    res.headers.set("Strict-Transport-Security", "max-age=63072000; includeSubDomains; preload");
+  }
+  if (isPrivate) res.headers.set("Cache-Control", "no-store, max-age=0");
+  return res;
+}
+
 async function slide(req: NextRequest, res: NextResponse, session: Sess | null, raw?: string) {
   if (!session || !raw) return res;
   try {
     const payload = decodeJwt(raw);
     const iat = typeof payload.iat === "number" ? payload.iat : 0;
-    const age = Math.floor(Date.now() / 1000) - iat;
-    if (age > SESSION_MAX_AGE / 2) {
+    if (Math.floor(Date.now() / 1000) - iat > SESSION_MAX_AGE / 2) {
       const token = await createSessionToken({
-        sub: session.sub,
-        role: session.role,
-        name: session.name,
-        email: session.email,
+        sub: session.sub, role: session.role, name: session.name, email: session.email,
         mustChangePassword: session.mustChangePassword ?? false,
         pending2fa: session.pending2fa ?? false,
       });
       res.cookies.set(SESSION_COOKIE, token, {
-        httpOnly: true,
-        sameSite: "lax",
+        httpOnly: true, sameSite: "lax",
         secure: process.env.NODE_ENV === "production",
-        maxAge: SESSION_MAX_AGE,
-        path: "/",
+        maxAge: SESSION_MAX_AGE, path: "/",
       });
     }
-  } catch {
-    // بی‌صدا
-  }
+  } catch {}
   return res;
 }
 
@@ -63,65 +67,37 @@ export default async function middleware(req: NextRequest) {
   const isPublicTeacherLanding = stripped.startsWith("/t/");
   const isLandingEditor =
     stripped === "/dashboard/landing-editor" || stripped.startsWith("/dashboard/landing-editor/");
+  const isPrivate = !isPublic && !isInvite && !isPublicTeacherLanding;
 
   const url = req.nextUrl.clone();
-  const done = (res: NextResponse) => slide(req, res, session, raw);
+  const done = async (res: NextResponse) => harden(await slide(req, res, session, raw), isPrivate);
+  const redirect = () => harden(NextResponse.redirect(url), isPrivate);
 
-  // ── 1) مسیرهای عمومی که auth نمی‌خوان
-  if (isPublic || isInvite || isPublicTeacherLanding) {
-    return done(intlMiddleware(req));
-  }
+  if (isPublic || isInvite || isPublicTeacherLanding) return done(intlMiddleware(req));
 
-  // ── 2) کاربر لاگین نکرده → login
-  if (!session) {
-    url.pathname = `/${locale}/login`;
-    return NextResponse.redirect(url);
-  }
+  if (!session) { url.pathname = `/${locale}/login`; return redirect(); }
 
-  // ── 3) 2FA معلق
-  if (session.pending2fa && !isVerify2fa) {
-    url.pathname = `/${locale}/login/verify-2fa`;
-    return NextResponse.redirect(url);
-  }
+  if (session.pending2fa && !isVerify2fa) { url.pathname = `/${locale}/login/verify-2fa`; return redirect(); }
 
-  // ── 4) صفحه‌ی auth برای کاربر لاگین‌شده → home
-  if (isAuthPage) {
-    url.pathname = homeFor(session.role, locale);
-    return NextResponse.redirect(url);
-  }
+  if (isAuthPage) { url.pathname = homeFor(session.role, locale); return redirect(); }
 
-  // ── 5) تغییر رمز اجباری
-  if (session.mustChangePassword && !isChangePassword) {
-    url.pathname = `/${locale}/change-password`;
-    return NextResponse.redirect(url);
-  }
+  if (session.mustChangePassword && !isChangePassword) { url.pathname = `/${locale}/change-password`; return redirect(); }
 
-  // ── 6) landing-editor قدیمی (فقط owner)
   if (isLandingEditor) {
     if (session.role !== "TEACHER" || session.email !== process.env.OWNER_EMAIL) {
-      url.pathname = `/${locale}/dashboard`;
-      return NextResponse.redirect(url);
+      url.pathname = `/${locale}/dashboard`; return redirect();
     }
     return done(intlMiddleware(req));
   }
 
-  // ── 7) محافظت role (layout.tsx چک دقیق platformRole رو انجام می‌ده)
   if (session.role === "STUDENT" && !isStudentArea && !isChangePassword) {
-    url.pathname = `/${locale}/student`;
-    return NextResponse.redirect(url);
+    url.pathname = `/${locale}/student`; return redirect();
   }
-
   if (session.role === "TEACHER" && isStudentArea) {
-    url.pathname = `/${locale}/dashboard`;
-    return NextResponse.redirect(url);
+    url.pathname = `/${locale}/dashboard`; return redirect();
   }
-
-  // ادمین و معلم می‌تونن به admin/* دسترسی داشته باشن
-  // چک platformRole توسط requireAdmin() در admin/layout.tsx انجام می‌شه
 
   return done(intlMiddleware(req));
 }
 
-export const config = {
-  matcher: ["/((?!api|_next|_vercel|.*\\..*).*)"],
-};
+export const config = { matcher: ["/((?!api|_next|_vercel|.*\\..*).*)"] };
