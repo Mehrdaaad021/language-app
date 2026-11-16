@@ -1,70 +1,72 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
-import { motion } from "framer-motion";
-import { Sparkles } from "lucide-react";
-import { useRouter } from "@/i18n/navigation";
-import Button from "@/components/ui/Button";
-import { TextField } from "@/components/ui/Field";
+import { useLocale } from "next-intl";
+import { BookOpen, TriangleAlert } from "lucide-react";
 import { setupTeacher } from "@/lib/server/auth-actions";
 
-export default function SetupForm() {
-  const t = useTranslations("Auth");
-  const router = useRouter();
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+const inputCls =
+  "w-full rounded-xl border border-white/40 bg-white/50 px-4 py-2.5 text-sm font-bold outline-none transition focus:border-[#D94F63]";
+
+export default function SetupForm({ dbError }: { dbError: boolean }) {
+  const locale = useLocale();
+  const fa = locale === "fa";
+  const [form, setForm] = useState({ name: "", email: "", password: "" });
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setError(null);
-    const res = await setupTeacher({ name, email, password });
-    if (!res.ok) {
-      setError(res.error);
-      setLoading(false);
+    setBusy(true);
+    setErr("");
+    const res = await setupTeacher(form);
+    setBusy(false);
+    if (res.ok) {
+      window.location.assign(`/${locale}/dashboard`);
       return;
     }
-    router.replace("/");
-    router.refresh();
+    if (res.error === "alreadySetup") {
+      window.location.assign(`/${locale}/login`);
+      return;
+    }
+    setErr(
+      res.error === "emailTaken"
+        ? fa ? "این ایمیل قبلاً ثبت شده" : "Email already taken"
+        : fa ? "ساخت حساب ناموفق بود" : "Setup failed"
+    );
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 24, scale: 0.97 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ type: "spring", stiffness: 300, damping: 26 }}
-      className="glass-strong w-full max-w-md rounded-[28px] p-8"
-    >
-      <div className="mb-6 flex flex-col items-center gap-3 text-center">
-        <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#FFE8C4] to-[#FFF4DE] text-[#8A5A22] shadow-inner">
-          <Sparkles size={24} />
-        </span>
-        <div>
-          <h1 className="text-xl font-extrabold">{t("setupTitle")}</h1>
-          <p className="mt-1 text-xs text-[var(--color-ink-soft)]">{t("setupSubtitle")}</p>
+    <main className="flex min-h-screen items-center justify-center p-6">
+      <div className="card-lux w-full max-w-md space-y-4 p-8">
+        <div className="flex flex-col items-center gap-2 text-center">
+          <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#E8697B] to-[#D94F63] text-white shadow-lg">
+            <BookOpen size={22} />
+          </span>
+          <h1 className="text-xl font-extrabold">{fa ? "ساخت حساب معلم" : "Create teacher account"}</h1>
         </div>
-      </div>
 
-      <form onSubmit={submit} className="flex flex-col gap-4" noValidate>
-        <TextField label={t("name")} placeholder="Mehrdad" value={name} onChange={(e) => setName(e.target.value)} />
-        <TextField label={t("email")} type="email" placeholder="you@class.ir" value={email} onChange={(e) => setEmail(e.target.value)} />
-        <TextField label={t("password")} type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} />
-        <p className="-mt-2 text-[11px] font-medium text-[var(--color-ink-soft)]">{t("passwordHint")}</p>
-
-        {error && (
-          <p className="rounded-xl bg-[rgba(217,79,99,0.12)] px-4 py-2.5 text-xs font-bold text-[#B23A4C]">
-            {t(`errors.${error}`)}
-          </p>
+        {dbError && (
+          <div className="flex items-start gap-2 rounded-2xl bg-[#f6e7c6] p-3 text-[11px] font-bold text-[#b3701f]">
+            <TriangleAlert size={14} className="mt-0.5 shrink-0" />
+            {fa ? "اتصال دیتابیس برقرار نشد — دوباره تلاش کن." : "Database unreachable — retry."}
+          </div>
         )}
 
-        <Button type="submit" className="mt-1 justify-center">
-          {loading ? t("loading") : t("submitSetup")}
-        </Button>
-      </form>
-    </motion.div>
+        <form onSubmit={submit} className="space-y-3">
+          <input className={inputCls} placeholder={fa ? "نام" : "Name"} required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+          <input className={inputCls} dir="ltr" type="email" placeholder={fa ? "ایمیل" : "Email"} required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+          <input className={inputCls} dir="ltr" type="password" placeholder={fa ? "رمز (حداقل ۸)" : "Password (min 8)"} required minLength={8} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
+          {err && <p className="text-[11px] font-extrabold text-[#b3261e]">{err}</p>}
+          <button type="submit" disabled={busy} className="btn-primary w-full rounded-full py-2.5 text-sm font-extrabold shadow-lg disabled:opacity-60">
+            {busy ? "…" : fa ? "ساخت حساب" : "Create account"}
+          </button>
+        </form>
+
+        <a href={`/${locale}/login`} className="block text-center text-xs font-extrabold text-[#d94f63]">
+          {fa ? "حساب داری؟ وارد شو" : "Have an account? Sign in"}
+        </a>
+      </div>
+    </main>
   );
 }

@@ -3,6 +3,8 @@ import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import LoginForm from "@/components/auth/LoginForm";
 
+export const dynamic = "force-dynamic";
+
 export default async function LoginPage({
   params,
 }: {
@@ -10,16 +12,19 @@ export default async function LoginPage({
 }) {
   const { locale } = await params;
   const session = await getSession();
-  if (session) redirect(session.role === "TEACHER" ? `/${locale}/` : `/${locale}/student`);
+  if (session) {
+    redirect(session.role === "STUDENT" ? `/${locale}/student` : `/${locale}/dashboard`);
+  }
 
-  const teachers = await prisma.user.count({ where: { role: "TEACHER" } });
+  let teachers = 1;
+  let dbError = false;
+  try {
+    teachers = await prisma.user.count({ where: { role: "TEACHER" } });
+  } catch {
+    dbError = true;
+  }
 
-  return (
-    <main className="relative flex min-h-screen items-center justify-center p-6">
-      <div className="glass-bg">
-        <div className="blob-3" />
-      </div>
-      <LoginForm showSetup={teachers === 0} />
-    </main>
-  );
+  if (!dbError && teachers === 0) redirect(`/${locale}/setup`);
+
+  return <LoginForm dbError={dbError} />;
 }

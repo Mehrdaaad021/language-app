@@ -6,7 +6,7 @@ import { getSession } from "@/lib/auth";
  */
 export async function getTeacherWorkspace(): Promise<{ userId: string; workspaceId: string } | null> {
   const session = await getSession();
-  if (!session || session.role !== "TEACHER") return null;
+  if (!session || session.role === "STUDENT") return null;
   const workspace = await prisma.workspace.findFirst({
     where: { ownerId: session.sub },
     select: { id: true },

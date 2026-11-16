@@ -1,80 +1,78 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
-import { motion } from "framer-motion";
-import { BookOpen } from "lucide-react";
-import { Link, useRouter } from "@/i18n/navigation";
-import Button from "@/components/ui/Button";
-import { TextField } from "@/components/ui/Field";
+import { useLocale } from "next-intl";
+import { BookOpen, TriangleAlert } from "lucide-react";
 import { loginAction } from "@/lib/server/auth-actions";
 
-export default function LoginForm({ showSetup }: { showSetup: boolean }) {
-  const t = useTranslations("Auth");
-  const router = useRouter();
+const inputCls =
+  "w-full rounded-xl border border-white/40 bg-white/50 px-4 py-2.5 text-sm font-bold outline-none transition focus:border-[#D94F63]";
+
+export default function LoginForm({ dbError }: { dbError: boolean }) {
+  const locale = useLocale();
+  const fa = locale === "fa";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setError(null);
+    setBusy(true);
+    setErr("");
     const res = await loginAction({ email, password });
-    if (!res.ok) {
-      setError(res.error);
-      setLoading(false);
+    setBusy(false);
+    if (res.ok) {
+      window.location.assign(`/${locale}/dashboard`);
       return;
     }
-    if (res.requires2fa) {
-      router.replace("/login/verify-2fa");
-      router.refresh();
+    if (res.error === "2fa") {
+      window.location.assign(`/${locale}/login/verify-2fa`);
       return;
     }
-    router.replace(res.role === "TEACHER" ? "/dashboard" : "/student");
-    router.refresh();
+    const map: Record<string, string> = {
+      invalid: fa ? "ایمیل یا رمز اشتباه است" : "Wrong email or password",
+      locked: fa ? "تلاش بیش از حد — ۱۰ دقیقه صبر کن" : "Too many attempts — wait 10 minutes",
+      suspended: fa ? "حساب معلق شده" : "Account suspended",
+    };
+    setErr(map[res.error ?? ""] ?? (fa ? "ورود ناموفق — دوباره تلاش کن" : "Login failed — try again"));
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 24, scale: 0.97 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ type: "spring", stiffness: 300, damping: 26 }}
-      className="glass-strong w-full max-w-md rounded-[28px] p-8"
-    >
-      <div className="mb-6 flex flex-col items-center gap-3 text-center">
-        <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#E8697B] to-[#D94F63] text-white shadow-[0_12px_30px_-12px_rgba(217,79,99,0.7)]">
-          <BookOpen size={24} />
-        </span>
-        <div>
-          <h1 className="text-xl font-extrabold">{t("loginTitle")}</h1>
-          <p className="mt-1 text-xs text-[var(--color-ink-soft)]">{t("loginSubtitle")}</p>
+    <main className="flex min-h-screen items-center justify-center p-6">
+      <div className="card-lux w-full max-w-md space-y-4 p-8">
+        <div className="flex flex-col items-center gap-2 text-center">
+          <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#E8697B] to-[#D94F63] text-white shadow-lg">
+            <BookOpen size={22} />
+          </span>
+          <h1 className="text-xl font-extrabold">{fa ? "ورود به دستیار کلاس" : "Sign in to Class Assistant"}</h1>
+          <p className="text-xs text-[var(--c-ink-soft)]">{fa ? "خوش برگشتی!" : "Welcome back!"}</p>
         </div>
-      </div>
 
-      <form onSubmit={submit} className="flex flex-col gap-4" noValidate>
-        <TextField label={t("email")} type="email" placeholder="you@class.ir" value={email} onChange={(e) => setEmail(e.target.value)} />
-        <TextField label={t("password")} type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} />
-
-        {error && (
-          <p className="rounded-xl bg-[rgba(217,79,99,0.12)] px-4 py-2.5 text-xs font-bold text-[#B23A4C]">
-            {t(`errors.${error}`)}
-          </p>
+        {dbError && (
+          <div className="flex items-start gap-2 rounded-2xl bg-[#f6e7c6] p-3 text-[11px] font-bold text-[#b3701f]">
+            <TriangleAlert size={14} className="mt-0.5 shrink-0" />
+            {fa
+              ? "اتصال به دیتابیس برقرار نشد. چند ثانیه صبر کن و دوباره تلاش کن (Neon در حال بیدار شدن است)."
+              : "Database unreachable. Wait a few seconds and retry (Neon is waking up)."}
+          </div>
         )}
 
-        <Button type="submit" className="mt-1 justify-center">
-          {loading ? t("loading") : t("submitLogin")}
-        </Button>
-      </form>
-
-      {showSetup && (
-        <p className="mt-5 text-center text-xs font-bold text-[var(--color-ink-soft)]">
-          <Link href="/setup" className="text-[var(--color-primary)] transition hover:text-[#B23A4C]">
-            {t("goSetup")}
-          </Link>
-        </p>
-      )}
-    </motion.div>
+        <form onSubmit={submit} className="space-y-3">
+          <div>
+            <label className="mb-1 block text-xs font-extrabold">{fa ? "ایمیل" : "Email"}</label>
+            <input className={inputCls} dir="ltr" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-extrabold">{fa ? "رمز عبور" : "Password"}</label>
+            <input className={inputCls} dir="ltr" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+          </div>
+          {err && <p className="text-[11px] font-extrabold text-[#b3261e]">{err}</p>}
+          <button type="submit" disabled={busy} className="btn-primary w-full rounded-full py-2.5 text-sm font-extrabold shadow-lg disabled:opacity-60">
+            {busy ? "…" : fa ? "ورود" : "Sign in"}
+          </button>
+        </form>
+      </div>
+    </main>
   );
 }

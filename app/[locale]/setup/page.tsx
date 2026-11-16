@@ -3,6 +3,8 @@ import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import SetupForm from "@/components/auth/SetupForm";
 
+export const dynamic = "force-dynamic";
+
 export default async function SetupPage({
   params,
 }: {
@@ -10,17 +12,19 @@ export default async function SetupPage({
 }) {
   const { locale } = await params;
   const session = await getSession();
-  if (session) redirect(`/${locale}/`);
+  if (session) {
+    redirect(session.role === "STUDENT" ? `/${locale}/student` : `/${locale}/dashboard`);
+  }
 
-  const teachers = await prisma.user.count({ where: { role: "TEACHER" } });
-  if (teachers > 0) redirect(`/${locale}/login`);
+  let teachers = 0;
+  let dbError = false;
+  try {
+    teachers = await prisma.user.count({ where: { role: "TEACHER" } });
+  } catch {
+    dbError = true;
+  }
 
-  return (
-    <main className="relative flex min-h-screen items-center justify-center p-6">
-      <div className="glass-bg">
-        <div className="blob-3" />
-      </div>
-      <SetupForm />
-    </main>
-  );
+  if (!dbError && teachers > 0) redirect(`/${locale}/login`);
+
+  return <SetupForm dbError={dbError} />;
 }
